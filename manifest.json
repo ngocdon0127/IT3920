@@ -5,11 +5,13 @@
 	"permissions": [
 		"activeTab",
 		"http://*/*",
-		"https://*/*"
+		"https://*/*",
+		"storage",
+		"contextMenus"
 	],
 	"browser_action": {
 		"default_title": "E2EE",
-		"default_popup": "cryptojs.html"
+		"default_popup": "/src/key-list.html"
 	},
 	"applications":{
 		"gecko": {
@@ -17,5 +19,15 @@
 			"strict_min_version": "45.0.0"
 		}
 	},
-	"manifest_version": 2
+	"manifest_version": 2,
+	"content_scripts": [
+		{
+			"matches": ["http://*/*", "https://*/*"],
+			"js": ["/res/jquery.min.js", "/src/content-scripts.js"],
+			"css": ["/src/content-css.css"]
+		}
+	],
+	"background": {
+		"scripts": ["/src/background.js"]
+	}
 }
