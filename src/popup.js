@@ -1,0 +1,253 @@
+// connect to background page
+var port = chrome.extension.connect({name: "get-login-status"});
+
+// send message to get login status
+port.postMessage({
+	name: 'get-login-status'
+});
+
+// receive login status
+port.onMessage.addListener(function (msg) {
+	console.log(msg);
+	if (msg.name === 'login-status'){
+		if (msg.isLoggedIn == 1){
+			alert('ok');
+			// need to do something here to switch tab
+		}
+		else{
+			// alert('no no');
+		}
+	}
+});
+
+$('#btnLogIn').on('click', function () {
+	var email = $('#email').val();
+	var password = $('#password').val();
+	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
+
+	// connect to server to check infomation
+	var data = {
+		'email': email,
+		'password': hashedPassword
+	}
+	$.ajax({ 
+		url: 'http://localhost:8080/E2EE/user/login', 
+		type: 'POST', 
+		dataType: 'json', 
+		data: JSON.stringify(data),
+		beforeSend: function(xhr) {
+			xhr.setRequestHeader("Accept", "application/json");
+			xhr.setRequestHeader("Content-Type", "application/json");
+			console.log(data);
+			console.log(JSON.stringify(data));
+		},
+		success: function(data) { 
+			// alert("success");
+			if ((data.hasOwnProperty('result')) && (data.result == 'Login Fail')){
+				alert("User or password is invalid");
+				return;
+			}
+			alert('login successfully.');
+
+			var info = {
+				isLoggedIn: 1,
+				userId: data.userId,
+				email: data.email,
+				publicKey: data.publicKey,
+				encryptedPrivateKey: data.encryptedPrivateKey
+			}
+			STORAGE_AREA.set({info: info}, function () {
+				if (typeof(chrome.runtime.lastError) !== 'undefined'){
+					alert("Could not save login info to chrome.");
+					return;
+				}
+				else{
+					alert("Save user info successfully.");
+					return;
+				}
+			})
+		},
+		error:function(data,status,er) { 
+			alert("error");
+			// user = {};
+		}
+	});
+});
+
+$('#btnReg').on('click', function () {
+
+	// Email is used to seed random in cryptico library by this statement:
+	// Math.seedrandom(sha256.hex(email));
+	var email = ob('reg-email').value.trim();
+	if (email.length < 1){
+		alert('Email must not be null.');
+		return;
+	}
+
+	// check if email is valid or not.
+	var emailRegex = /.+@.+\..+/;
+	if (emailRegex.test(email) == false){
+		alert('Invalid email.');
+		return;
+	}
+
+	var password = ob('reg-password').value;
+	if (password.length < 1){
+		alert('Passphrase must not be null.');
+		return;
+	}
+
+	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
+
+	var key = generateRSAKey(email, hashedPassword, 1024);
+
+	var data = {
+		"email": email,
+		"password": hashedPassword,
+		"publicKey": key.public, 
+		"encryptedPrivateKey": key.private
+	}
+	$.ajax({ 
+		url: 'http://localhost:8080/E2EE/user/register', 
+		type: 'POST', 
+		dataType: 'json', 
+		data: JSON.stringify(data),
+		beforeSend: function(xhr) {
+			xhr.setRequestHeader("Accept", "application/json");
+			xhr.setRequestHeader("Content-Type", "application/json");
+			console.log(data);
+			console.log(JSON.stringify(data));
+		},
+		success: function(data) { 
+			alert("success");
+			console.log(data);
+			return false;
+		},
+		error:function(data,status,er) { 
+			alert("error");
+		}
+	});
+});
+
+/**
+ * Generate new RSA Key
+ * @param {string} email Email of user
+ * @param {string} passphrase Password of user
+ *
+ * @return {object} RSA Key
+ */
+function generateRSAKey (email, passphrase, bitlen) {
+
+	var originalEmail = email;
+
+	// generate a unique number
+	var date = (new Date()).getTime();
+
+	// convert email to string
+	email += ' ' + date;
+	
+	// encrypt email using MD5
+	email = CryptoJS.MD5(email).toString(CryptoJS.enc.Base16);
+
+	var key = {};
+
+	var RSAKey = cryptico.generateRSAKey(email, bitlen);
+	key.public = preEncrypt(cryptico.publicKeyString(RSAKey) + '|' + originalEmail);
+	var prepriv = preEncrypt(cryptico.privateKeyString(RSAKey) + '|' + originalEmail);
+	key.private = CryptoJS.AES.encrypt(prepriv, passphrase).toString();
+	
+	return key;
+}
+
+// dany santos
+function sign_up() {
+	var inputs = document.querySelectorAll('.input_form_sign');
+	document.querySelectorAll('.ul_tabs > li')[0].className="";
+	document.querySelectorAll('.ul_tabs > li')[1].className="active";
+	for (var i = 0; i < inputs.length ; i++  ) {
+		if(i == 2  ) {
+		} else {
+			document.querySelectorAll('.input_form_sign')[i].className = "input_form_sign d_block";
+		}
+	}
+	setTimeout( function() {
+		for (var d = 0; d < inputs.length ; d++  ) {
+			document.querySelectorAll('.input_form_sign')[d].className = "input_form_sign d_block active_inp";
+		}
+	}
+	,100 );
+	document.querySelector('.link_forgot_pass').style.opacity = "0";
+	document.querySelector('.link_forgot_pass').style.top = "-5px";
+	document.querySelector('.btn_sign').innerHTML = "SIGN UP";
+	setTimeout(function() {
+		document.querySelector('.terms_and_cons').style.opacity = "1";
+		document.querySelector('.terms_and_cons').style.top = "5px";
+	}
+	,500);
+	setTimeout(function() {
+		document.querySelector('.link_forgot_pass').className = "link_forgot_pass d_none";
+		document.querySelector('.terms_and_cons').className = "terms_and_cons d_block";
+	}
+	,450);
+}
+function sign_in() {
+	var inputs = document.querySelectorAll('.input_form_sign');
+	document.querySelectorAll('.ul_tabs > li')[0].className = "active";
+	document.querySelectorAll('.ul_tabs > li')[1].className = "";
+	for (var i = 0; i < inputs.length ; i++  ) {
+		switch(i) {
+			case 1:
+				console.log(inputs[i].name);
+				break;
+			case 2:
+				console.log(inputs[i].name);
+			default: 
+			document.querySelectorAll('.input_form_sign')[i].className = "input_form_sign d_block";
+		}
+	}
+	setTimeout( function() {
+		for (var d = 0; d < inputs.length ; d++  ) {
+			switch(d) {
+				case 1:
+						console.log(inputs[d].name);
+				break;
+				case 2:
+						console.log(inputs[d].name);
+				default:
+				document.querySelectorAll('.input_form_sign')[d].className = "input_form_sign d_block";
+				document.querySelectorAll('.input_form_sign')[2].className = "input_form_sign d_block active_inp";
+			}
+		}
+	}
+	,100 );
+	document.querySelector('.terms_and_cons').style.opacity = "0";
+	document.querySelector('.terms_and_cons').style.top = "-5px";
+	setTimeout(function() {
+		document.querySelector('.terms_and_cons').className = "terms_and_cons d_none";
+		document.querySelector('.link_forgot_pass').className = "link_forgot_pass d_block";
+	}
+	,500);
+	setTimeout(function() {
+		document.querySelector('.link_forgot_pass').style.opacity = "1";
+		document.querySelector('.link_forgot_pass').style.top = "5px";
+		for (var d = 0; d < inputs.length ; d++  ) {
+			switch(d) {
+				case 1:
+				 console.log(inputs[d].name);
+				break;
+				case 2:
+				 console.log(inputs[d].name);
+				break;
+				default:
+				 document.querySelectorAll('.input_form_sign')[d].className = "input_form_sign";
+			}
+		}
+	}
+	,1500);
+	document.querySelector('.btn_sign').innerHTML = "SIGN IN";
+}
+
+
+
+$('#li_sign_in').on('click', sign_in)
+$('#li_sign_up').on('click', sign_up)

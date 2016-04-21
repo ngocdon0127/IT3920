@@ -11,7 +11,7 @@
 	],
 	"browser_action": {
 		"default_title": "E2EE",
-		"default_popup": "/src/key-list.html"
+		"default_popup": "/src/popup.html"
 	},
 	"applications":{
 		"gecko": {

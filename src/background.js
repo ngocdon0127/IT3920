@@ -1,3 +1,6 @@
+// Extension saves data to this StorageArea
+var STORAGE_AREA = chrome.storage.sync;
+
 // id of Gmail tab.
 var sourceTabId = '';
 
@@ -76,3 +79,35 @@ function clickHandler (data, tab) {
 // 	}
 // 	alert(e[0].getAttribute('email'));
 // }
+
+chrome.extension.onConnect.addListener(function (port){
+	port.onMessage.addListener(function (msg) {
+
+		// check login
+		if (msg.name == "get-login-status"){
+			STORAGE_AREA.get("info", function (items) {
+				console.log(items);
+				if (items.info.isLoggedIn == 1){
+					port.postMessage({
+						name: 'login-status',
+						isLoggedIn: 1,
+						email: items.info.email
+					});
+				}
+				else{
+					port.postMessage({
+						name: 'login-status',
+						isLoggedIn: 0
+					})
+				}
+			})
+		}
+
+		// login
+		else if (msg.name == 'login'){
+			var username = msg.username;
+			var password = msg.password;
+
+		}
+	})
+})
