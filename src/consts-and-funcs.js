@@ -169,7 +169,7 @@ var BUTTON_LOADING = function(e) {
 };
 
 /**
- * Beaurify Email
+ * Beautify Email
  *
  * @param {string} email Email suppose to be sent
  * @return {string} aligned email

@@ -63,6 +63,10 @@ var fRender = function () {
 				// element.appendChild(e);
 				e.setAttribute('class', 'wG J-Z-I btn btn-primary');
 				div.appendChild(e);
+				var atms = document.getElementsByClassName('wG J-Z-I')[0];
+				atms = $(atms).clone();
+				$(atms).prop('id', 'e2eesa');
+				$(atms).appendTo(div);
 			}
 			else{
 			}
@@ -82,3 +86,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		editable.innerHTML = request.encryptedData;
 	}
 });
+
+function getEmailAddress () {
+	var emailAddress = '';
+	// Gmail
+	if (window.location.hostname === 'mail.google.com'){
+		var ea = document.getElementsByClassName('gb_ob')[0];
+		// console.log('gb_ob');
+		// console.log(ea.innerHTML);
+		var emailRegex = /.+@.+\..+/;
+		if (emailRegex.test(ea.innerHTML) !== false){
+			return ea.innerHTML;
+		}
+		ea = document.getElementsByClassName('gb_pb')[0];
+		// console.log('gb_pb');
+		// console.log(ea.innerHTML);
+		if (emailRegex.test(ea.innerHTML) !== false){
+			return ea.innerHTML;
+		}
+		return false;
+	}
+}

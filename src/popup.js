@@ -107,6 +107,9 @@ $('#btnReg').on('click', function () {
 		"publicKey": key.public, 
 		"encryptedPrivateKey": key.private
 	}
+
+	// check if email exist
+	
 	$.ajax({ 
 		url: 'http://localhost:8080/E2EE/user/register', 
 		type: 'POST', 
