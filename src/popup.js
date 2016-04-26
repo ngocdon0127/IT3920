@@ -11,7 +11,18 @@ port.onMessage.addListener(function (msg) {
 	console.log(msg);
 	if (msg.name === 'login-status'){
 		if (msg.isLoggedIn == 1){
-			alert('ok');
+			// alert('ok');
+			ob('home').children[0].children[0].innerHTML = "<h2>" + msg.email + "</h2>";
+			var btn = document.createElement('button');
+			$(btn).addClass('btn btn-primary');
+			$(btn).text('Log out');
+			$(btn).on('click', function () {
+				STORAGE_AREA.clear(function () {
+					alert('Signed Out.');
+					window.close();
+				})
+			});
+			ob('home').children[0].children[0].appendChild(btn);
 			// need to do something here to switch tab
 		}
 		else{
@@ -47,7 +58,17 @@ $('#btnLogIn').on('click', function () {
 				alert("User or password is invalid");
 				return;
 			}
-			alert('login successfully.');
+			ob('home').children[0].children[0].innerHTML = "<h2>" + data.email + "</h2>";
+			var btn = document.createElement('button');
+			$(btn).addClass('btn btn-primary');
+			$(btn).text('Log out');
+			$(btn).on('click', function () {
+				STORAGE_AREA.clear(function () {
+					alert('Signed Out.');
+					window.close();
+				})
+			});
+			ob('home').children[0].children[0].appendChild(btn);
 
 			var info = {
 				isLoggedIn: 1,
@@ -59,11 +80,11 @@ $('#btnLogIn').on('click', function () {
 			}
 			STORAGE_AREA.set({info: info}, function () {
 				if (typeof(chrome.runtime.lastError) !== 'undefined'){
-					alert("Could not save login info to chrome.");
+					// alert("Could not save login info to chrome.");
 					return;
 				}
 				else{
-					alert("Save user info successfully.");
+					// alert("Save user info successfully.");
 					return;
 				}
 			})
@@ -98,6 +119,11 @@ $('#btnReg').on('click', function () {
 		return;
 	}
 
+	if (password !== ob('reg-password-repeat').value){
+		alert('Password not match.');
+		return;
+	}
+
 	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 
 	var key = generateRSAKey(email, hashedPassword, 1024);
@@ -110,8 +136,6 @@ $('#btnReg').on('click', function () {
 	}
 
 	console.log(data);
-
-	// TODO check if email exist
 	
 	$.ajax({ 
 		url: 'http://localhost:8080/E2EE/user/register', 
@@ -130,7 +154,7 @@ $('#btnReg').on('click', function () {
 			return false;
 		},
 		error:function(data,status,er) { 
-			alert("error");
+			alert("Email is already exist.");
 		}
 	});
 });
