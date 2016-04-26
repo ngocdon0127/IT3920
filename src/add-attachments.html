@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Decrypt Email</title>
+	<title>Encrypt Email</title>
 	<!-- Latest compiled and minified CSS -->
 	<link rel="stylesheet" href="/res/bootstrap.min.css">
 
@@ -31,27 +31,19 @@
 
 	<!-- https://github.com/eligrey/FileSaver.js - used to save decrypted attachments-->
 	<script src="/res/FileSaver.js"></script>
+	<style>
+	</style>
 </head>
 <body>
 	<div class="container">
 			<div class="form-group">
-				<textarea type="text" id="text" class="form-control" placeholder="Text"></textarea>
-			</div>
-			<div class="form-group">
-				<label for="attach">Choose *.encrypted file to decrypt</label>
+				<label for="attach">Attachments</label>
 				<input type="file" name="attach" id="attach" multiple>
 			</div>
-			<div class="form-group hidden">
-				<label for="slRecipients">Decrypt email with account: </label>
-				<select name="slRecipients" id="slRecipients"></select>
-			</div>
 			<div class="form-group">
-				<button data-label="Decrypt" id="btnDecrypt" class="btn-crypto">Decrypt</button>
+				<button data-label="Encrypt" id="btnEncrypt" class="btn-crypto">Encrypt</button>
 			</div>
-			<div class="form-group">
-				<div contenteditable="true" id="decrypted" style="display: none"></div>
-			</div>
-			<script src="decrypt-email.js"></script>
+			<script src="/src/add-attachments.js"></script>
 	</div>
 </body>
 </html>

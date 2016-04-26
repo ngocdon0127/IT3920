@@ -39,6 +39,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					});
 				});
 			}
+			else if (msg.actionType === 'send-aes-key-file-to-background'){
+				var aesKeyFile = msg.aesKeyFile;
+				chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+					chrome.tabs.sendMessage(sourceTabId, {actionType: 'send-aes-key-file-to-content-script', aesKeyFile: aesKeyFile}, function (response) {
+						
+					})
+				})
+			}
 		})
 	});
 });
@@ -220,6 +228,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		//         alert("error");
 		//     }
 		// });
+	}
+	else if (request.actionType === 'open-add-attachments-frame'){
+		// Save Gmail tab id.
+		chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+			sourceTabId = tabs[0].id;
+		});
+		// open email editor.
+		chrome.windows.create({
+			url: '/src/add-attachments.html'
+		});
 	}
 	return true;  // call sendResponse async - very important
 })

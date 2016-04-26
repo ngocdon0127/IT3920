@@ -24,6 +24,9 @@ var encryptedEmailContent = '';
 // Number of encrypted email for recipients
 var encryptedEmail = 0;
 
+// use this key to encrypt attachments.
+var aesKeyFile = '';
+
 // public key of recipients
 var publicKeys = {};
 
@@ -198,6 +201,18 @@ var fRender = function () {
 				atms = $(atms).clone();
 				$(atms).prop('id', 'e2eesa');
 				$(atms).appendTo(div);
+
+				// handle click event for Encrypted Attachment Button
+				$(atms).on('click', function () {
+					console.log('click');
+					chrome.runtime.sendMessage(
+						{
+							actionType: 'open-add-attachments-frame',
+						}, 
+						function (response) {
+							console.log(response);
+					});
+				})
 			}
 			else{
 			}
@@ -211,10 +226,14 @@ var fRender = function () {
 // receive encrypted email
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.encryptedData != null){
-		console.log(sender);
-		console.log(request);
+		// console.log(sender);
+		// console.log(request);
 		editable.value = request.encryptedData;
 		editable.innerHTML = request.encryptedData;
+	}
+	else if (request.actionType === 'send-aes-key-file-to-content-script'){
+		console.log(sender);
+		aesKeyFile = request.aesKeyFile;
 	}
 });
 

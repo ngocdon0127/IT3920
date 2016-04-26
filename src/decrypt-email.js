@@ -112,8 +112,6 @@ port.onMessage.addListener(function(msg) {
 
 	// insert data to select#slRecipients
 	var contents = ob('text').value.split(STR_SEPERATOR);
-	console.log(contents);
-	ob('slRecipients').innerHTML = '';
 	contents.forEach(function (content) {
 		var c = '';
 		try{
@@ -136,14 +134,8 @@ port.onMessage.addListener(function(msg) {
 			// window.close();
 			return;
 		}
-		var emailContent = data[0];
+		var emailContent = data[0]; // what???
 		var recipient = data[1];
-		// console.log('recipient');
-		// console.log(recipient);
-		var e = document.createElement('option');
-		e.value = recipient;
-		e.innerHTML = recipient;
-		ob('slRecipients').appendChild(e);
 
 		// fill data to singleEmails object
 		singleEmails[recipient] = content;
@@ -199,8 +191,14 @@ function decryptEmail(data) {
 		});
 		$('#decrypted').fadeIn();
 		if (ob('attach').files.length < 1){
-			ob('btnDecrypt').classList.remove('loading');
-			ob('btnDecrypt').removeAttribute('disabled');
+
+			// without decrypting files, extension can decrypt email very fast.
+			// => let it animate in a short time before reverting it to the original state.
+			setTimeout(function () {
+				ob('btnDecrypt').classList.remove('loading');
+				ob('btnDecrypt').removeAttribute('disabled');
+			}, 500);
+			// console.log('remove loading UI effect');
 		}
 		else{
 			aesKeyFile = plainText[1];
