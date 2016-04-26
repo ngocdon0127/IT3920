@@ -110,4 +110,116 @@ chrome.extension.onConnect.addListener(function (port){
 
 		}
 	})
+});
+
+// handle message from content script
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.actionType === 'get-login-status'){
+		STORAGE_AREA.get("info", function (items) {
+			console.log(items);
+			if (items.info.isLoggedIn == 1){
+				sendResponse({
+					name: 'login-status',
+					isLoggedIn: 1,
+					email: items.info.email,
+					hashedPassword: items.info.hashedPassword,
+					publicKey: items.info.publicKey,
+					userId: items.info.userId,
+					encryptedPrivateKey: items.info.encryptedPrivateKey
+				});
+			}
+			else{
+				sendResponse({
+					name: 'login-status',
+					isLoggedIn: 0
+				})
+			}
+		})
+	}
+	else if (request.actionType === 'check-recipients-exist'){
+		var data = request;
+		console.log(data);
+		$.ajax({
+			url: 'http://localhost:8080/E2EE/user/checkExistedUsers',
+			type: 'POST',
+			data: JSON.stringify(data),
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader("Accept", "application/json");
+				xhr.setRequestHeader("Content-Type", "application/json");
+			},
+			success: function(data) { 
+				// alert("success");
+				sendResponse({
+					name: 'recipients-status',
+					data: data
+				});
+				return false;
+			},
+			error:function(data,status,er) { 
+				alert("error");
+			}
+		})
+	}
+	else if (request.actionType === 'request-public-key'){
+		
+		var data = request;
+		$.ajax({ 
+			url: 'http://localhost:' + SERVER_PORT + '/E2EE/key/requestPublicKey', 
+			type: 'POST', 
+			dataType: 'json', 
+			data: JSON.stringify(data),
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader("Accept", "application/json");
+				xhr.setRequestHeader("Content-Type", "application/json");
+				// console.log(data);
+				// console.log(JSON.stringify(data));
+			},
+			success: function(data) { 
+			   // alert("success");
+			   console.log(data);
+			   sendResponse({
+					name: 'requested-public-keys',
+					data: data
+				});
+			   return false;
+			},
+			error:function(data,status,er) { 
+				alert("error");
+			}
+		});
+	}
+	else if (request.actionType === 'register-multiple-users'){
+		// handle later
+		
+	    // for (var i = 0; i < e.length; i++) {
+	    //     var u = {};
+	    //     u.email = e[i];
+	    //     u.password = 'passwordFor' + u.email;
+	    //     u.publicKey = 'publicKeyFor' + e[i];
+	    //     u.encryptedPrivateKey = 'privateKeyFor' + e[i];
+	    //     users.push(u);
+	    // }
+	    // var data = {
+	    //     'requestUser': user,
+	    //     'requestedUsers': users
+	    // }
+	    // jQuery.ajax({
+	    //     url: '/E2EE/user/registerUsers',
+	    //     type: 'POST',
+	    //     data: JSON.stringify(data),
+	    //     beforeSend: function(xhr) {
+	    //         xhr.setRequestHeader("Accept", "application/json");
+	    //         xhr.setRequestHeader("Content-Type", "application/json");
+	    //     },
+	    //     success: function(data) { 
+	    //        alert("success");
+	    //        console.log(data);
+	    //        return false;
+	    //     },
+	    //     error:function(data,status,er) { 
+	    //         alert("error");
+	    //     }
+	    // });
+	}
+	return true;  // call sendResponse async - very important
 })

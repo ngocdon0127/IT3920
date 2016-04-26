@@ -23,11 +23,36 @@
 	"content_scripts": [
 		{
 			"matches": ["http://*/*", "https://*/*"],
-			"js": ["/res/jquery.min.js", "/src/content-scripts.js"],
+			"js": [
+				"/res/jquery.min.js", 
+				"/src/content-scripts.js",
+				"/cryptico/jsbn.js",
+				"/cryptico/random.js",
+				"/cryptico/hash.js",
+				"/cryptico/rsa.js",
+				"/cryptico/aes.js",
+				"/cryptico/api.js",
+				"/crypto-js/build/rollups/md5.js",
+				"/crypto-js/build/rollups/aes.js",
+				"/crypto-js/build/components/enc-base64-min.js",
+				"/src/consts-and-funcs.js"
+			],
 			"css": ["/src/content-css.css"]
 		}
 	],
 	"background": {
-		"scripts": ["/src/background.js"]
+		"scripts": [
+			"/res/jquery.min.js",
+			"/cryptico/jsbn.js",
+			"/cryptico/random.js",
+			"/cryptico/hash.js",
+			"/cryptico/rsa.js",
+			"/cryptico/aes.js",
+			"/cryptico/api.js",
+			"/crypto-js/build/rollups/md5.js",
+			"/crypto-js/build/rollups/aes.js",
+			"/crypto-js/build/components/enc-base64-min.js",
+			"/src/consts-and-funcs.js", 
+			"/src/background.js"]
 	}
 }

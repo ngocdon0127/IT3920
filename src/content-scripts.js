@@ -2,9 +2,30 @@ function ob (x) {
 	return document.getElementById(x);
 }
 
+// user info
+var user = {};
+
 // save editor frame of Gmail.
 var element = '';
 var editable = '';
+
+// Number of recipients
+var noOfRecipients = 0;
+
+// email of recipients
+var recipients = [];
+
+// email content
+var emailContent = '';
+
+// encrypted email content
+var encryptedEmailContent = '';
+
+// Number of encrypted email for recipients
+var encryptedEmail = 0;
+
+// public key of recipients
+var publicKeys = {};
 
 // button to render extension frame
 var e = document.createElement('div');
@@ -12,18 +33,128 @@ e.innerHTML = 'Safe Send';
 e.id = 'eframe-cryptojs';
 e.addEventListener('click', clickHandler);
 
+chrome.runtime.sendMessage({
+		actionType: 'get-login-status',
+	},
+	function (response) {
+		if (response.isLoggedIn == 1){
+			user = response;
+			// console.log(user);
+		}
+	}
+)
+
 /**
  * Render button
  */
 function clickHandler() {
-	// console.log('clicked');
-	chrome.runtime.sendMessage({
-			actionType: 'open-encrypt-frame',
-			emailContent: document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML
-		}, 
-		function (response) {
+	console.log('clicked');
+	// console.log(user);
+	// console.log(user.userId);
+	// console.log(!user.hasOwnProperty('userId'));
+	noOfRecipients = 0;
+	recipients = [];
+	encryptedEmail = 0;
+	encryptedEmailContent = '';
+	var divRecipients = document.getElementsByClassName('vR');
+	for(var i = 0; i < divRecipients.length; i++){
+		var e = divRecipients[i].children[0].getAttribute('email');
+		if (recipients.indexOf(e) < 0)
+			recipients.push(e);
+	}
+	var myEmail = getEmailAddress();
+	console.log(myEmail);
+	if (recipients.indexOf(myEmail) < 0){
+		recipients.push(myEmail);
+	}
+	noOfRecipients = recipients.length;
+	emailContent = document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML;
+	
+	// request public key
 
-	});
+	// need to check if recipient has E2EE account or not
+	var data = {};
+	if (!user.hasOwnProperty('userId')){
+		alert("login first.");
+		return;
+	}
+	data['requestUser'] = {
+		userId: user.userId,
+		password: user.hashedPassword
+	};
+	var users = [];
+	for (var i = 0; i < recipients.length; i++) {
+		users.push({'email': recipients[i]});
+	}
+	data['requestedUsers'] = users;
+	chrome.runtime.sendMessage(
+		{
+			actionType: 'check-recipients-exist',
+			requestUser: data['requestUser'],
+			requestedUsers: users
+		},
+		function (response) {
+			if (response.name !== 'recipients-status'){
+				return;
+			}
+			var exist = [];
+			var notExist = [];
+			var d = response.data;
+
+			// optimize later.
+			// Using data['requestedUsers'].filter
+			for (var i in d){
+				if (d[i] === 'Exist'){
+					exist.push({'email': i});
+				}
+				else if (d[i] === 'Not Exist'){
+					notExist.push({'email': i});
+				}
+			}
+			// request public key for user in exist[]
+			chrome.runtime.sendMessage({
+					actionType: 'request-public-key',
+					requestUser: data['requestUser'],
+					requestedUsers: exist,
+				},
+				function (response) {
+					if (response.name !== 'requested-public-keys'){
+						return;
+					}
+					// save to global variable.
+					publicKeys = response.data;
+					console.log(publicKeys);
+				}
+			)
+			// register account for user in notExist[]
+			chrome.runtime.sendMessage({
+					actionType: 'register-multiple-users',
+					requestUser: data['requestUser'],
+					requestedUsers: notExist,
+				},
+				function (response) {
+					// if (response.name !== 'requested-public-keys'){
+					// 	return;
+					// }
+					// save to global variable.
+					// publicKeys = response.data;
+				}
+			)
+		}
+	);
+
+	var intervalEncrypt = setInterval(function () {
+		// console.log(Object.keys(publicKeys).length + " : " + noOfRecipients);
+		if (Object.keys(publicKeys).length >= noOfRecipients){
+			clearInterval(intervalEncrypt);
+
+			// Now extension can start encrypting email.
+			console.log('start encrypting');
+			encryptEmail();
+			console.log('done');
+		}
+	}, 1000);
+
 }
 
 var interval;
@@ -87,23 +218,92 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	}
 });
 
-function getEmailAddress () {
-	var emailAddress = '';
-	// Gmail
-	if (window.location.hostname === 'mail.google.com'){
-		var ea = document.getElementsByClassName('gb_ob')[0];
-		// console.log('gb_ob');
-		// console.log(ea.innerHTML);
-		var emailRegex = /.+@.+\..+/;
-		if (emailRegex.test(ea.innerHTML) !== false){
-			return ea.innerHTML;
-		}
-		ea = document.getElementsByClassName('gb_pb')[0];
-		// console.log('gb_pb');
-		// console.log(ea.innerHTML);
-		if (emailRegex.test(ea.innerHTML) !== false){
-			return ea.innerHTML;
-		}
-		return false;
+/**
+ * Encrypt the whole email
+ */
+function encryptEmail () {
+	
+	// generate a random key
+	Math.seedrandom((new Date()).getTime() + ' ');
+	aesKeyFile = (new Date()).getTime() + ' ' + Math.random();
+	// aesKeyFile = CryptoJS.MD5(aesKeyFile).toString(CryptoJS.enc.Base16);
+
+	// add aesKeyFile to the original email.
+	// send it to recipient.
+	// so that recipient can decrypt attachments.
+	// var plainText = ob('text').innerHTML + '|' + aesKeyFile;
+	var plainText = emailContent;
+	var flags = {
+		ef: 0
 	}
+
+	if (noOfRecipients < 1){
+		alert('Select at least 1 recipient.');
+		// ob('btnEncrypt').classList.remove('loading');
+		// ob('btnEncrypt').removeAttribute('disabled');
+		return;
+	}
+
+	// if (ob('attach').files.length > 0){
+	// 	if (checkFile()){
+	// 		alert('The maximum size of a single file is 25 MB and total size must less than 90 MB.');
+	// 		ob('btnEncrypt').classList.remove('loading');
+	// 		ob('btnEncrypt').removeAttribute('disabled');
+	// 		return;
+	// 	}
+	// }
+
+	// Encrypt email for recipients.
+	for (var i = 0; i < recipients.length; i++) {
+		var recipient = recipients[i];
+		log('start encrypting email for ' + recipient);
+		ee(recipient, plainText, flags);
+	}
+	var interval = setInterval(function () {
+		log(encryptedEmail + ' / ' + noOfRecipients + ' done.');
+		// finish encrypting
+		if (encryptedEmail >= noOfRecipients){
+			// remove the last STR_SEPERATOR
+			encryptedEmailContent = encryptedEmailContent.substring(0, encryptedEmailContent.length - STR_SEPERATOR.length);
+			// align email
+			encryptedEmailContent = alignEmail(encryptedEmailContent);
+			document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML = encryptedEmailContent;
+			clearInterval(interval);
+			// jQuery('#encrypted').fadeIn();
+			log('done');
+			// if (ob('attach').files.length < 1){
+			// 	ob('btnEncrypt').classList.remove('loading');
+			// 	ob('btnEncrypt').removeAttribute('disabled');
+			// }
+		}
+	}, 1);
+}
+
+/**
+ * Encrypt 1 single email for 1 recipient.
+ *
+ * @param {string} recipient Email address of recipient
+ * @param {string} plainText The original email that will be encrypt
+ * @param {object} obj Flags
+ */
+function ee (recipient, plainText, obj) {
+
+	var data = preDecrypt(publicKeys[recipient]);
+	data = data.split('|');
+	if (data[1] != recipient){
+		alert('Email is not matched.');
+		return;
+	}
+	var publicKey = data[0];
+	var cipher = cryptico.encrypt(unescape(encodeURIComponent(plainText)), publicKey);
+	encryptedEmailContent += preEncrypt(cipher.cipher + '|' + recipient) + STR_SEPERATOR;
+	encryptedEmail++;
+
+	// Attachments should be encrypted 1 single time.
+	// if (obj.ef == 0){
+	// 	if (ob('attach').files.length > 0){
+	// 		// encryptFile();
+	// 		obj.ef = 1;
+	// 	}
+	// }
 }

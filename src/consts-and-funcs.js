@@ -21,6 +21,9 @@ var ALIGN_OPEN_TAG = "<pre>";
 
 var ALIGN_CLOSE_TAG = "</pre>";
 
+// Server run at this port
+var SERVER_PORT = '8080';
+
 /**
  * Short hand
  */
@@ -208,4 +211,55 @@ function deAlignEmail (email) {
 	// remove ALIGN TAGS
 	// email = email.substring(ALIGN_OPEN_TAG.length, email.length - ALIGN_CLOSE_TAG);
 	return email.split("\n").join('');
+}
+
+/**
+ * Generate new RSA Key
+ * @param {string} email Email of user
+ * @param {string} passphrase Password of user
+ *
+ * @return {object} RSA Key
+ */
+function generateRSAKey (email, passphrase, bitlen) {
+
+	var originalEmail = email;
+
+	// generate a unique number
+	var date = (new Date()).getTime();
+
+	// convert email to string
+	email += ' ' + date;
+	
+	// encrypt email using MD5
+	email = CryptoJS.MD5(email).toString(CryptoJS.enc.Base16);
+
+	var key = {};
+
+	var RSAKey = cryptico.generateRSAKey(email, bitlen);
+	key.public = preEncrypt(cryptico.publicKeyString(RSAKey) + '|' + originalEmail);
+	var prepriv = preEncrypt(cryptico.privateKeyString(RSAKey) + '|' + originalEmail);
+	key.private = CryptoJS.AES.encrypt(prepriv, passphrase).toString();
+	
+	return key;
+}
+
+function getEmailAddress () {
+	var emailAddress = '';
+	// Gmail
+	if (window.location.hostname === 'mail.google.com'){
+		var ea = document.getElementsByClassName('gb_ob')[0];
+		// console.log('gb_ob');
+		// console.log(ea.innerHTML);
+		var emailRegex = /.+@.+\..+/;
+		if (emailRegex.test(ea.innerHTML) !== false){
+			return ea.innerHTML;
+		}
+		ea = document.getElementsByClassName('gb_pb')[0];
+		// console.log('gb_pb');
+		// console.log(ea.innerHTML);
+		if (emailRegex.test(ea.innerHTML) !== false){
+			return ea.innerHTML;
+		}
+		return false;
+	}
 }

@@ -17,14 +17,8 @@ ob('attach').addEventListener('change', handleFileSelect, false);
 // use this key to decrypt attachments.
 var aesKeyFile = '';
 
-// storage single email for 1 recipient
-// structure:
-// singleEmails = {
-// 	'e1@ex.com': 'CtnIuSOas...QkK240ieyL8/VHE',
-// 	'e2@ex.net': 'tnIsdfexi...jde25s0ie/tiAcs'
-// }
-// will be filled right after the time popup windows is created.
-var singleEmails = {};
+// user's email
+var myEmail = getEmailAddress();
 
 // decrypt worker.
 var dw = undefined;
@@ -203,7 +197,7 @@ function decryptEmail(data) {
 }
 
 ob('btnDecrypt').addEventListener('click', function () {
-	decryptEmail(singleEmails[ob('slRecipients').value]);
+	decryptEmail(singleEmails['ngocdon127@gmail.com']);
 });
 
 // Add loading effect

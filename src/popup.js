@@ -53,6 +53,7 @@ $('#btnLogIn').on('click', function () {
 				isLoggedIn: 1,
 				userId: data.userId,
 				email: data.email,
+				hashedPassword: hashedPassword,
 				publicKey: data.publicKey,
 				encryptedPrivateKey: data.encryptedPrivateKey
 			}
@@ -108,7 +109,9 @@ $('#btnReg').on('click', function () {
 		"encryptedPrivateKey": key.private
 	}
 
-	// check if email exist
+	console.log(data);
+
+	// TODO check if email exist
 	
 	$.ajax({ 
 		url: 'http://localhost:8080/E2EE/user/register', 
@@ -131,36 +134,6 @@ $('#btnReg').on('click', function () {
 		}
 	});
 });
-
-/**
- * Generate new RSA Key
- * @param {string} email Email of user
- * @param {string} passphrase Password of user
- *
- * @return {object} RSA Key
- */
-function generateRSAKey (email, passphrase, bitlen) {
-
-	var originalEmail = email;
-
-	// generate a unique number
-	var date = (new Date()).getTime();
-
-	// convert email to string
-	email += ' ' + date;
-	
-	// encrypt email using MD5
-	email = CryptoJS.MD5(email).toString(CryptoJS.enc.Base16);
-
-	var key = {};
-
-	var RSAKey = cryptico.generateRSAKey(email, bitlen);
-	key.public = preEncrypt(cryptico.publicKeyString(RSAKey) + '|' + originalEmail);
-	var prepriv = preEncrypt(cryptico.privateKeyString(RSAKey) + '|' + originalEmail);
-	key.private = CryptoJS.AES.encrypt(prepriv, passphrase).toString();
-	
-	return key;
-}
 
 // dany santos
 function sign_up() {
