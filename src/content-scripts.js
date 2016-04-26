@@ -232,7 +232,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		editable.innerHTML = request.encryptedData;
 	}
 	else if (request.actionType === 'send-aes-key-file-to-content-script'){
-		console.log(sender);
+		// console.log(sender);
 		aesKeyFile = request.aesKeyFile;
 	}
 });
@@ -241,17 +241,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * Encrypt the whole email
  */
 function encryptEmail () {
-	
-	// generate a random key
-	Math.seedrandom((new Date()).getTime() + ' ');
-	aesKeyFile = (new Date()).getTime() + ' ' + Math.random();
-	// aesKeyFile = CryptoJS.MD5(aesKeyFile).toString(CryptoJS.enc.Base16);
 
-	// add aesKeyFile to the original email.
-	// send it to recipient.
-	// so that recipient can decrypt attachments.
-	// var plainText = ob('text').innerHTML + '|' + aesKeyFile;
-	var plainText = emailContent;
+	//add aesKeyFile to the original email.
+	//send it to recipient.
+	//so that recipient can decrypt attachments.
+	var plainText = emailContent + '|' + aesKeyFile;
+	// console.log(plainText);
+	// var plainText = emailContent;
 	var flags = {
 		ef: 0
 	}

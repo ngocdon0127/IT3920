@@ -202,6 +202,7 @@ function decryptEmail(data) {
 		}
 		else{
 			aesKeyFile = plainText[1];
+			console.log(aesKeyFile);
 			decryptFile();
 		}
 	}

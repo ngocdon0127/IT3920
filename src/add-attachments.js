@@ -24,6 +24,15 @@ ob('attach').addEventListener('change', handleFileSelect, false);
  * @param {object} evt Event button clicked or null
  */
 function encryptFile (evt) {
+	
+	if (ob('attach').files.length > 0){
+		if (checkFile()){
+			alert('The maximum size of a single file is 25 MB and total size must less than 90 MB.');
+			ob('btnEncrypt').classList.remove('loading');
+			ob('btnEncrypt').removeAttribute('disabled');
+			return;
+		}
+	}
 	var date1 = new Date();
 	files = ob('attach').files;
 	console.log(files);
