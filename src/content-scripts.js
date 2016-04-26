@@ -136,18 +136,23 @@ function clickHandler() {
 					requestedUsers: notExist,
 				},
 				function (response) {
-					// if (response.name !== 'requested-public-keys'){
-					// 	return;
-					// }
+					if (response.name !== 'send-registered-users'){
+						return;
+					}
+					console.log(response);
 					// save to global variable.
-					// publicKeys = response.data;
+					for(var i = 0; i < response.data.length; i++){
+						publicKeys[response.data[i].email] = response.data[i].publicKey;
+					}
+					console.log('publicKeys');
+					console.log(publicKeys);
 				}
 			)
 		}
 	);
 
 	var intervalEncrypt = setInterval(function () {
-		// console.log(Object.keys(publicKeys).length + " : " + noOfRecipients);
+		console.log(Object.keys(publicKeys).length + " : " + noOfRecipients);
 		if (Object.keys(publicKeys).length >= noOfRecipients){
 			clearInterval(intervalEncrypt);
 

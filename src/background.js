@@ -198,36 +198,46 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	}
 	else if (request.actionType === 'register-multiple-users'){
 		// handle later
-		
-		// for (var i = 0; i < e.length; i++) {
-		//     var u = {};
-		//     u.email = e[i];
-		//     u.password = 'passwordFor' + u.email;
-		//     u.publicKey = 'publicKeyFor' + e[i];
-		//     u.encryptedPrivateKey = 'privateKeyFor' + e[i];
-		//     users.push(u);
-		// }
-		// var data = {
-		//     'requestUser': user,
-		//     'requestedUsers': users
-		// }
-		// jQuery.ajax({
-		//     url: '/E2EE/user/registerUsers',
-		//     type: 'POST',
-		//     data: JSON.stringify(data),
-		//     beforeSend: function(xhr) {
-		//         xhr.setRequestHeader("Accept", "application/json");
-		//         xhr.setRequestHeader("Content-Type", "application/json");
-		//     },
-		//     success: function(data) { 
-		//        alert("success");
-		//        console.log(data);
-		//        return false;
-		//     },
-		//     error:function(data,status,er) { 
-		//         alert("error");
-		//     }
-		// });
+		var data = request;
+		console.log(data);
+		var ru = data['requestedUsers'];
+		for (var i = 0; i < ru.length; i++) {
+
+			// 123123 is implicit
+			ru[i].password = CryptoJS.MD5('123123').toString(CryptoJS.enc.Base16);
+			var rsa = generateRSAKey(ru[i].email, ru[i].password, 1024);
+			ru[i].publicKey = rsa.public;
+			ru[i].encryptedPrivateKey = rsa.private;
+		}
+		jQuery.ajax({
+			url: 'http://localhost:' + SERVER_PORT + '/E2EE/user/registerUsers',
+			type: 'POST',
+			data: JSON.stringify(data),
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader("Accept", "application/json");
+				xhr.setRequestHeader("Content-Type", "application/json");
+			},
+			success: function(data) { 
+				// alert("success");
+				console.log(data);
+				if (data.result === 'success'){
+					for (var i = 0; i < ru.length; i++) {
+
+						// 123123 is implicit
+						delete ru[i].password;
+						delete ru[i].encryptedPrivateKey;
+					}
+					sendResponse({
+						name: 'send-registered-users',
+						data: ru
+					});
+				}
+				return false;
+			},
+			error:function(data,status,er) { 
+				alert("error");
+			}
+		});
 	}
 	else if (request.actionType === 'open-add-attachments-frame'){
 		// Save Gmail tab id.

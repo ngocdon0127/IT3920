@@ -184,7 +184,7 @@ function alignEmail (email) {
 	 * remove it and trim() string before doing anything else
 	 */
 	email = email.replace(/\u200B/g, '').trim();
-	var charsInLine = 60;
+	var charsInLine = 90;
 	var e = '';
 	while (email.length > 0){
 		e += email.substring(0, charsInLine);
