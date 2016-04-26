@@ -36,6 +36,7 @@ e.innerHTML = 'Encrypt';
 e.id = 'eframe-cryptojs';
 e.addEventListener('click', clickHandler);
 
+// check login status
 chrome.runtime.sendMessage({
 		actionType: 'get-login-status',
 	},
@@ -52,6 +53,18 @@ chrome.runtime.sendMessage({
  */
 function clickHandler() {
 	console.log('clicked');
+
+	// check login status
+	chrome.runtime.sendMessage({
+			actionType: 'get-login-status',
+		},
+		function (response) {
+			if (response.isLoggedIn == 1){
+				user = response;
+				// console.log(user);
+			}
+		}
+	)
 	// console.log(user);
 	// console.log(user.userId);
 	// console.log(!user.hasOwnProperty('userId'));
