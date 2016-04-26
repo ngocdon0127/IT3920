@@ -1,5 +1,28 @@
 'use strict';
 
+// user info
+var user = {};
+
+// storage single email for 1 recipient
+// structure:
+// singleEmails = {
+// 	'e1@ex.com': 'CtnIuSOas...QkK240ieyL8/VHE',
+// 	'e2@ex.net': 'tnIsdfexi...jde25s0ie/tiAcs'
+// }
+// will be filled right after the time popup windows is created.
+var singleEmails = {};
+
+chrome.runtime.sendMessage({
+		actionType: 'get-login-status',
+	},
+	function (response) {
+		if (response.isLoggedIn == 1){
+			user = response;
+			console.log(user);
+		}
+	}
+)
+
 // Log data to console when user choose files.
 function handleFileSelect (event) {
 	var files = event.target.files;
@@ -90,6 +113,7 @@ port.onMessage.addListener(function(msg) {
 	// insert data to select#slRecipients
 	var contents = ob('text').value.split(STR_SEPERATOR);
 	console.log(contents);
+	ob('slRecipients').innerHTML = '';
 	contents.forEach(function (content) {
 		var c = '';
 		try{
@@ -114,8 +138,8 @@ port.onMessage.addListener(function(msg) {
 		}
 		var emailContent = data[0];
 		var recipient = data[1];
-		log('recipient');
-		log(recipient);
+		// console.log('recipient');
+		// console.log(recipient);
 		var e = document.createElement('option');
 		e.value = recipient;
 		e.innerHTML = recipient;
@@ -143,61 +167,56 @@ function decryptEmail(data) {
 		console.log('Data is corrupted.');
 		return;
 	}
-	STORAGE_AREA.get(data[1], function (items) {
+	
+	// start decrypting
+	if (!user.hasOwnProperty('userId')){
+		alert("You have to log in first.");
+		return;
+	}
 
-		// Chrome doesn't have private key of this email address.
-		if (jQuery.isEmptyObject(items)){
-			alert('Could not find private key of ' + data[1]);
-			return;
+	// Chrome has already storaged key pair of this email before.
+	try {
+		var privateKey = user.encryptedPrivateKey;
+		// console.log(privateKey);
+		var passphrase = prompt('Enter passphrase of ' + data[1] + ':', '');
+		passphrase = CryptoJS.MD5(passphrase).toString(CryptoJS.enc.Base16);
+		privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
+		privateKey = preDecrypt(privateKey);
+		// console.log('done privateKey');
+		var plainText = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
+		plainText = decodeURIComponent(escape(plainText.plaintext)).split('|');
+
+		// plainText should consist of 1 or 2 parts.
+		// The first part is the original email Alice sends to Bob.
+		// The second part (if exist) is the AES secret key used to encrypt attachments.
+		// These two parts is seperated by '|'
+
+		// Ex:
+		// This is an encrypted email without any attachments.
+		// This is an encrypted email with attachments|somekey.
+		$('#decrypted').html(function () {
+			return plainText[0];
+		});
+		$('#decrypted').fadeIn();
+		if (ob('attach').files.length < 1){
+			ob('btnDecrypt').classList.remove('loading');
+			ob('btnDecrypt').removeAttribute('disabled');
 		}
-
-		// Chrome has already storaged key pair of this email before.
-		if (items[data[1]].isPairKey == 1){
-			try {
-				var privateKey = items[data[1]].private;
-				var passphrase = prompt('Enter passphrase of ' + data[1] + ':', '');
-				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
-				privateKey = preDecrypt(privateKey);
-				var plainText = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
-				plainText = decodeURIComponent(escape(plainText.plaintext)).split('|');
-
-				// plainText should consist of 1 or 2 parts.
-				// The first part is the original email Alice sends to Bob.
-				// The second part (if exist) is the AES secret key used to encrypt attachments.
-				// These two parts is seperated by '|'
-
-				// Ex:
-				// This is an encrypted email without any attachments.
-				// This is an encrypted email with attachments|somekey.
-				$('#decrypted').html(function () {
-					return plainText[0];
-				});
-				$('#decrypted').fadeIn();
-				if (ob('attach').files.length < 1){
-					ob('btnDecrypt').classList.remove('loading');
-					ob('btnDecrypt').removeAttribute('disabled');
-				}
-				else{
-					aesKeyFile = plainText[1];
-					decryptFile();
-				}
-			}
-			catch (e){
-				alert('Email is corrupted or invalid passphrase.');
-				ob('btnDecrypt').classList.remove('loading');
-				ob('btnDecrypt').removeAttribute('disabled');
-			}
-		}
-
-		// Chrome has public key of this email only.
 		else{
-			alert('Private key of ' + data[1] + ' is not exist.');
+			aesKeyFile = plainText[1];
+			decryptFile();
 		}
-	})
+	}
+	catch (e){
+		alert('Email is corrupted or invalid passphrase.');
+		ob('btnDecrypt').classList.remove('loading');
+		ob('btnDecrypt').removeAttribute('disabled');
+	}
 }
 
 ob('btnDecrypt').addEventListener('click', function () {
-	decryptEmail(singleEmails['ngocdon127@gmail.com']);
+	console.log('My email is ' + user.email);
+	decryptEmail(singleEmails[user.email]);
 });
 
 // Add loading effect
