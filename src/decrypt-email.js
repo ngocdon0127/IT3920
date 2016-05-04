@@ -214,7 +214,7 @@ function decryptEmail(data) {
 }
 
 ob('btnDecrypt').addEventListener('click', function () {
-	console.log('My email is ' + user.email);
+	// console.log('My email is ' + user.email);
 	decryptEmail(singleEmails[user.email]);
 });
 

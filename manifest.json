@@ -54,5 +54,11 @@
 			"/crypto-js/build/components/enc-base64-min.js",
 			"/src/consts-and-funcs.js", 
 			"/src/background.js"]
+	},
+	"icons":{
+		"16": "/res/oie_transparent.png",
+		"32": "/res/oie_transparent.png",
+		"64": "/res/oie_transparent.png",
+		"128": "/res/oie_transparent.png"
 	}
 }
