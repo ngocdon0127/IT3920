@@ -1,5 +1,5 @@
 // Extension saves data to this StorageArea
-var STORAGE_AREA = chrome.storage.sync;
+var STORAGE_AREA = chrome.storage.local;
 
 // id of Gmail tab.
 var sourceTabId = '';

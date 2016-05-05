@@ -206,7 +206,7 @@ function encryptEmail () {
  * @param {object} obj Flags
  */
 function ee (recipient, plainText, obj) {
-	chrome.storage.sync.get(recipient, function (items) {
+	chrome.storage.local.get(recipient, function (items) {
 		var key = items[recipient];
 		if (typeof(key) !== 'undefined'){
 			var data = preDecrypt(key.public);

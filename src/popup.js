@@ -249,5 +249,5 @@ function sign_in() {
 
 
 
-$('#li_sign_in').on('click', sign_in)
-$('#li_sign_up').on('click', sign_up)
+$('#li_sign_in').on('click', sign_in);
+$('#li_sign_up').on('click', sign_up);

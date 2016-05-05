@@ -53,7 +53,7 @@ function generateRSAKey () {
 function saveRSAKey () {
 	$('#btnSaveRSAKey').text('Saving...');
 	var email = ob('email').value.trim();
-	chrome.storage.sync.get(email, function (items) {
+	chrome.storage.local.get(email, function (items) {
 		if (!jQuery.isEmptyObject(items)){
 			var c = confirm('This email has already had a key pair. Overwrite?');
 			$('#btnSaveRSAKey').text('Save RSA Key');
@@ -71,7 +71,7 @@ function saveRSAKey () {
 			private: ob('priv').value,
 			isPairKey: 1
 		}
-		chrome.storage.sync.set(data, function () {
+		chrome.storage.local.set(data, function () {
 			if (typeof(chrome.runtime.lastError) !== 'undefined'){
 				console.log('error');
 				$('#btnSaveRSAKey').text('Save RSA Key');

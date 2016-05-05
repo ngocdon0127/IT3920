@@ -6,7 +6,7 @@
 var LOCAL_KEY = '8499a08c77ba81cd35d8e93642da34b6';
 
 // Extension saves data to this StorageArea
-var STORAGE_AREA = chrome.storage.sync;
+var STORAGE_AREA = chrome.storage.local;
 
 // seperate file dataURL with this string. Need to be long and semantic enough.
 // Or, this can be some character which is not included in Base64 index table. 
@@ -80,7 +80,7 @@ function addIndexes (email, fn) {
 			items.indexes.push(email);
 			indexes = items.indexes;
 		}
-		chrome.storage.sync.set({
+		chrome.storage.local.set({
 			indexes: indexes
 		}, fn);
 	});
