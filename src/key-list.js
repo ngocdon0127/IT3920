@@ -1,11 +1,11 @@
 var ul = ob('ulKeys');
 
 (function () {
-	chrome.storage.local.get('indexes', function (items) {
+	STORAGE_AREA.get('indexes', function (items) {
 		if (!jQuery.isEmptyObject(items)){
 			var indexes = items.indexes;
 			indexes.forEach(function (i) {
-				chrome.storage.local.get(i, function (obs) {
+				STORAGE_AREA.get(i, function (obs) {
 					var key = obs[i];
 					var li = document.createElement('li');
 					var span = document.createElement('span');

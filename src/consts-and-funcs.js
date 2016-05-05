@@ -80,7 +80,7 @@ function addIndexes (email, fn) {
 			items.indexes.push(email);
 			indexes = items.indexes;
 		}
-		chrome.storage.local.set({
+		STORAGE_AREA.set({
 			indexes: indexes
 		}, fn);
 	});
