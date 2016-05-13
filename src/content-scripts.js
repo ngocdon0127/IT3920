@@ -1,3 +1,21 @@
+var GMAIL = 0;
+var HUST_MAIL = 1;
+var MAIL_SERVICE = getMailService();
+
+function getMailService () {
+	var gmail = ["mail.google.com"];
+	var hustMail = ["mail.hust.vn", "mail.hust.edu.vn"];
+	var hostname = window.location.hostname;
+	if (gmail.indexOf(hostname) >= 0){
+		return GMAIL;
+	}
+	if (hustMail.indexOf(hostname) >= 0){
+		return HUST_MAIL;
+	}
+	return -1;
+}
+
+console.log("content-script");
 function ob (x) {
 	return document.getElementById(x);
 }
@@ -46,7 +64,35 @@ chrome.runtime.sendMessage({
 			// console.log(user);
 		}
 	}
-)
+);
+
+/**
+ * Get all recipients
+ *
+ * @return {array} all recipents' email
+ */
+function getRecipients(){
+	if (window.location.hostname === "mail.google.com"){
+		var divRecipients = document.getElementsByClassName('vR');
+		var result = [];
+		for (var i = 0; i < divRecipients.length; i++){
+			result.push(divRecipients[i].children[0].getAttribute('email'));
+		}
+		return result;
+	}
+	else if (window.location.hostname === "mail.hust.vn"){
+		var to = ob('To').value.match(/([\w\.0-9_]*@[\w\.0-9]*)/g);
+		var cc = ob('CC').value.match(/([\w\.0-9_]*@[\w\.0-9]*)/g);
+		var result = [];
+		if (to){
+			result = result.concat(to);
+		}
+		if (cc){
+			result = result.concat(cc);
+		}
+		return result;
+	}
+}
 
 /**
  * Render button
@@ -72,19 +118,33 @@ function clickHandler() {
 	recipients = [];
 	encryptedEmail = 0;
 	encryptedEmailContent = '';
-	var divRecipients = document.getElementsByClassName('vR');
+
+	var isGmail = 0;
+	var isHustMail = 1;
+	var myEmail;
+
+	var divRecipients = getRecipients();
 	for(var i = 0; i < divRecipients.length; i++){
-		var e = divRecipients[i].children[0].getAttribute('email');
-		if (recipients.indexOf(e) < 0)
+		var e = divRecipients[i];
+		if ((recipients.indexOf(e) < 0) && (typeof(e) != 'undefined'))
 			recipients.push(e);
 	}
-	var myEmail = getEmailAddress();
+
+	myEmail = getEmailAddress();
 	console.log(myEmail);
-	if (recipients.indexOf(myEmail) < 0){
+	if ((recipients.indexOf(myEmail) < 0) && (typeof(myEmail) != 'undefined')){
 		recipients.push(myEmail);
 	}
+	console.log("recipients");
+	console.log(recipients);
 	noOfRecipients = recipients.length;
-	emailContent = document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML;
+	if (MAIL_SERVICE === GMAIL){
+		emailContent = document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML;
+	}
+	else if (MAIL_SERVICE == HUST_MAIL){
+		emailContent = document.getElementsByTagName("iframe")[0].contentWindow.document.body.innerHTML;
+		console.log(emailContent);
+	}
 	
 	// request public key
 
@@ -179,67 +239,124 @@ function clickHandler() {
 }
 
 var interval;
+if (MAIL_SERVICE === GMAIL){
+	fRender = function () {
+		try{
+			// try to bind Gmail editor
+			editable = document.getElementsByClassName('Am Al editable LW-avf')[0];
+			// toolbar in Gmail editor.
+			var tr = document.getElementsByClassName('n1tfz')[0];
+			var div = null;
+			element = editable.parentElement;
+
+			// if Gmail editor is opening
+			if (tr != null){
+				var check = 0;
+				var td = tr.children[3];
+				div = td.children[0];
+				for (var i = 0; i < div.children.length; i++) {
+					child = div.children[i];
+					if (child.id == 'eframe-cryptojs'){
+						check = 1;
+						break;
+					}
+				}
+				if (check != 1){
+					// element.appendChild(e);
+					e.setAttribute('class', 'wG J-Z-I btn btn-primary');
+					div.appendChild(e);
+					var atms = document.getElementsByClassName('wG J-Z-I')[0];
+					atms = $(atms).clone();
+					$(atms).prop('id', 'e2eesa');
+					$(atms).appendTo(div);
+
+					// handle click event for Encrypted Attachment Button
+					$(atms).on('click', function () {
+						console.log('click');
+						chrome.runtime.sendMessage(
+							{
+								actionType: 'open-add-attachments-frame',
+							}, 
+							function (response) {
+								console.log(response);
+						});
+					})
+				}
+				else{
+				}
+			}
+		}
+		catch (e){
+
+		}
+	}
+}
+
+else if (MAIL_SERVICE === HUST_MAIL){
+	fRender = function () { 
+		console.log("call frender");
+		try{
+			// try to bind HustMail editor
+			// editable = document.getElementsByClassName('cke_show_borders')[0];
+			editable = document.getElementsByTagName("iframe")[0].contentWindow.document.body;
+			console.log("editable");
+			console.log(editable);
+			
+			// toolbar in HustMail editor.
+			var table = document.getElementsByClassName('Header')[1];
+			console.log("table");
+			console.log(table);
+
+			var img = $(".HeaderImg").detach();
+			console.log("img");
+			console.log(img);
+			console.log("table1");
+			console.log(table);
+			console.log("table1child0");
+			console.log(table.children[0]);
+			console.log("table1child0child0");
+			console.log(table.children[0].children[0]);
+			table.children[0].children[0].appendChild(e);
+			console.log("append e ok");
+			var atms = document.createElement("td");
+			atms.innerHTML = "attach";
+			$(atms).appendTo($(table.children[0].children[0]));
+			$(img[1]).appendTo($(table.children[0].children[0]));
+			console.log("done");
+			// var atms = document.getElementsByClassName('wG J-Z-I')[0];
+			// atms = $(atms).clone();
+			// $(atms).prop('id', 'e2eesa');
+			// $(atms).appendTo(div);
+
+			// handle click event for Encrypted Attachment Button
+			$(atms).on('click', function () {
+				console.log('click');
+				chrome.runtime.sendMessage(
+					{
+						actionType: 'open-add-attachments-frame',
+					}, 
+					function (response) {
+						console.log(response);
+				});
+			})
+		}
+		catch (err){
+			console.log(err);
+		}
+	}
+}
 
 // render extension button after DOM loaded 5s.
 setTimeout(function () {
-	// Try to render every 1000
-	interval = setInterval(fRender, 1000);
+	if (MAIL_SERVICE === GMAIL){
+		// Try to render every 1000
+		interval = setInterval(fRender, 1000);
+	}
+	else if (MAIL_SERVICE === HUST_MAIL){
+		fRender();
+	}
 }, 5000);
-var fRender = function () {
-	try{
-		// console.log(jQuery('.dL'));
-		// console.log(jQuery('.dL').children()[2]);
-		// jQuery('.dL').children()[2].mousedown();
-		// jQuery('.dL').children()[2].click();
-		// jQuery('.dL').children()[2].mouseup();
-		// try to bind Gmail editor
-		editable = document.getElementsByClassName('Am Al editable LW-avf')[0];
-		// toolbar in Gmail editor.
-		var tr = document.getElementsByClassName('n1tfz')[0];
-		var div = null;
-		element = editable.parentElement;
-
-		// if Gmail editor is opening
-		if (tr != null){
-			var check = 0;
-			var td = tr.children[3];
-			div = td.children[0];
-			for (var i = 0; i < div.children.length; i++) {
-				child = div.children[i];
-				if (child.id == 'eframe-cryptojs'){
-					check = 1;
-					break;
-				}
-			}
-			if (check != 1){
-				// element.appendChild(e);
-				e.setAttribute('class', 'wG J-Z-I btn btn-primary');
-				div.appendChild(e);
-				var atms = document.getElementsByClassName('wG J-Z-I')[0];
-				atms = $(atms).clone();
-				$(atms).prop('id', 'e2eesa');
-				$(atms).appendTo(div);
-
-				// handle click event for Encrypted Attachment Button
-				$(atms).on('click', function () {
-					console.log('click');
-					chrome.runtime.sendMessage(
-						{
-							actionType: 'open-add-attachments-frame',
-						}, 
-						function (response) {
-							console.log(response);
-					});
-				})
-			}
-			else{
-			}
-		}
-	}
-	catch (e){
-
-	}
-}
+var fRender;
 
 // receive encrypted email
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -300,7 +417,12 @@ function encryptEmail () {
 			encryptedEmailContent = encryptedEmailContent.substring(0, encryptedEmailContent.length - STR_SEPERATOR.length);
 			// align email
 			encryptedEmailContent = alignEmail(encryptedEmailContent);
-			document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML = encryptedEmailContent;
+			if (MAIL_SERVICE === GMAIL){
+				document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML = encryptedEmailContent;
+			}
+			else if (MAIL_SERVICE === HUST_MAIL){
+				document.getElementsByTagName("iframe")[0].contentWindow.document.body.innerHTML = encryptedEmailContent;
+			}
 			clearInterval(interval);
 			// jQuery('#encrypted').fadeIn();
 			log('done');
