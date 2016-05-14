@@ -1,4 +1,11 @@
 'use strict';
+
+// Number of recipients
+var noOfRecipients = 0;
+
+// Number of encrypted email for recipients
+var encryptedEmail = 0;
+
 // use this key to encrypt attachments.
 var aesKeyFile = '';
 
@@ -97,35 +104,6 @@ function encryptFile (evt) {
 		alert('This browser does not support web worker.');
 	}
 }
-
-/**
- * Insert data to select element
- */
-// (function () {
-// 	STORAGE_AREA.get('indexes', function (items) {
-// 		var indexes = items.indexes;
-// 		if (typeof(indexes) !== 'undefined'){
-// 			indexes.forEach(function (it) {
-// 				STORAGE_AREA.get(it, function (key) {
-// 					key = key[it];
-// 					if (typeof(key) !== 'undefined'){
-// 						var opt = document.createElement('option');
-// 						var data = preDecrypt(key.public).split('|');
-// 						opt.value = data[1];
-// 						opt.innerHTML = data[1];
-// 						ob('slRecipient').appendChild(opt);
-// 					}
-// 				})
-// 			})
-// 		}
-// 	})
-// })();
-
-// Number of recipients
-var noOfRecipients = 0;
-
-// Number of encrypted email for recipients
-var encryptedEmail = 0;
 
 /**
  * Encrypt the whole email

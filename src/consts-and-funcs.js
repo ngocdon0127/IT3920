@@ -249,23 +249,24 @@ function generateRSAKey (email, passphrase, bitlen) {
 function getEmailAddress () {
 	var emailAddress = '';
 	var emailRegex = /.+@.+\..+/;
+	var hostname = window.location.hostname;
+
 	// Gmail
-	if (window.location.hostname === 'mail.google.com'){
+	if (hostname === 'mail.google.com'){
 		var ea = document.getElementsByClassName('gb_ob')[0];
-		// console.log('gb_ob');
-		// console.log(ea.innerHTML);
 		if (emailRegex.test(ea.innerHTML) !== false){
 			return ea.innerHTML;
 		}
+
 		ea = document.getElementsByClassName('gb_pb')[0];
-		// console.log('gb_pb');
-		// console.log(ea.innerHTML);
 		if (emailRegex.test(ea.innerHTML) !== false){
 			return ea.innerHTML;
 		}
 		return false;
 	}
-	else if (window.location.hostname === "mail.hust.vn"){
+
+	// Hust Mail
+	else if ((hostname === "mail.hust.vn") || (hostname === "mail.hust.edu.vn")){
 		var selectEmail = ob("From");
 		var emailId = selectEmail.value;
 		for (var i = 0; i < selectEmail.children.length; i++) {
@@ -275,7 +276,6 @@ function getEmailAddress () {
 				break;
 			}
 		}
-		console.log(emailAddress);
 		var result = emailAddress.match(/([\w\.0-9_]*@[\w\.0-9]*)/g);
 		if (emailRegex.test(result[0]) !== false){
 			return result[0];

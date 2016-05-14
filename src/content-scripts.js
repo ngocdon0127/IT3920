@@ -1,24 +1,9 @@
+// constants
 var GMAIL = 0;
 var HUST_MAIL = 1;
 var MAIL_SERVICE = getMailService();
 
-function getMailService () {
-	var gmail = ["mail.google.com"];
-	var hustMail = ["mail.hust.vn", "mail.hust.edu.vn"];
-	var hostname = window.location.hostname;
-	if (gmail.indexOf(hostname) >= 0){
-		return GMAIL;
-	}
-	if (hustMail.indexOf(hostname) >= 0){
-		return HUST_MAIL;
-	}
-	return -1;
-}
-
-console.log("content-script");
-function ob (x) {
-	return document.getElementById(x);
-}
+// variables and functions
 
 // user info
 var user = {};
@@ -47,6 +32,24 @@ var aesKeyFile = '';
 
 // public key of recipients
 var publicKeys = {};
+
+/**
+ *	Detect current Email Service
+ *
+ * @return GMAIL or HUST_MAIL
+ */
+function getMailService () {
+	var gmail = ["mail.google.com"];
+	var hustMail = ["mail.hust.vn", "mail.hust.edu.vn"];
+	var hostname = window.location.hostname;
+	if (gmail.indexOf(hostname) >= 0){
+		return GMAIL;
+	}
+	if (hustMail.indexOf(hostname) >= 0){
+		return HUST_MAIL;
+	}
+	return -1;
+}
 
 // button to render extension frame
 var e = document.createElement('div');
@@ -107,13 +110,9 @@ function clickHandler() {
 		function (response) {
 			if (response.isLoggedIn == 1){
 				user = response;
-				// console.log(user);
 			}
 		}
 	)
-	// console.log(user);
-	// console.log(user.userId);
-	// console.log(!user.hasOwnProperty('userId'));
 	noOfRecipients = 0;
 	recipients = [];
 	encryptedEmail = 0;
@@ -131,19 +130,15 @@ function clickHandler() {
 	}
 
 	myEmail = getEmailAddress();
-	console.log(myEmail);
 	if ((recipients.indexOf(myEmail) < 0) && (typeof(myEmail) != 'undefined')){
 		recipients.push(myEmail);
 	}
-	console.log("recipients");
-	console.log(recipients);
 	noOfRecipients = recipients.length;
 	if (MAIL_SERVICE === GMAIL){
 		emailContent = document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML;
 	}
 	else if (MAIL_SERVICE == HUST_MAIL){
 		emailContent = document.getElementsByTagName("iframe")[0].contentWindow.document.body.innerHTML;
-		console.log(emailContent);
 	}
 	
 	// request public key
@@ -199,7 +194,6 @@ function clickHandler() {
 					}
 					// save to global variable.
 					publicKeys = response.data;
-					console.log(publicKeys);
 				}
 			)
 			// register account for user in notExist[]
@@ -212,13 +206,10 @@ function clickHandler() {
 					if (response.name !== 'send-registered-users'){
 						return;
 					}
-					console.log(response);
 					// save to global variable.
 					for(var i = 0; i < response.data.length; i++){
 						publicKeys[response.data[i].email] = response.data[i].publicKey;
 					}
-					console.log('publicKeys');
-					console.log(publicKeys);
 				}
 			)
 		}
@@ -277,7 +268,6 @@ if (MAIL_SERVICE === GMAIL){
 
 					// handle click event for Encrypted Attachment Button
 					$(atms).on('click', function () {
-						console.log('click');
 						chrome.runtime.sendMessage(
 							{
 								actionType: 'open-add-attachments-frame',
@@ -299,43 +289,23 @@ if (MAIL_SERVICE === GMAIL){
 
 else if (MAIL_SERVICE === HUST_MAIL){
 	fRender = function () { 
-		console.log("call frender");
 		try{
 			// try to bind HustMail editor
 			// editable = document.getElementsByClassName('cke_show_borders')[0];
 			editable = document.getElementsByTagName("iframe")[0].contentWindow.document.body;
-			console.log("editable");
-			console.log(editable);
-			
+
 			// toolbar in HustMail editor.
 			var table = document.getElementsByClassName('Header')[1];
-			console.log("table");
-			console.log(table);
 
 			var img = $(".HeaderImg").detach();
-			console.log("img");
-			console.log(img);
-			console.log("table1");
-			console.log(table);
-			console.log("table1child0");
-			console.log(table.children[0]);
-			console.log("table1child0child0");
-			console.log(table.children[0].children[0]);
 			table.children[0].children[0].appendChild(e);
-			console.log("append e ok");
 			var atms = document.createElement("td");
 			atms.innerHTML = "attach";
 			$(atms).appendTo($(table.children[0].children[0]));
 			$(img[1]).appendTo($(table.children[0].children[0]));
-			console.log("done");
-			// var atms = document.getElementsByClassName('wG J-Z-I')[0];
-			// atms = $(atms).clone();
-			// $(atms).prop('id', 'e2eesa');
-			// $(atms).appendTo(div);
 
 			// handle click event for Encrypted Attachment Button
 			$(atms).on('click', function () {
-				console.log('click');
 				chrome.runtime.sendMessage(
 					{
 						actionType: 'open-add-attachments-frame',
@@ -366,13 +336,10 @@ var fRender;
 // receive encrypted email
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.encryptedData != null){
-		// console.log(sender);
-		// console.log(request);
 		editable.value = request.encryptedData;
 		editable.innerHTML = request.encryptedData;
 	}
 	else if (request.actionType === 'send-aes-key-file-to-content-script'){
-		// console.log(sender);
 		aesKeyFile = request.aesKeyFile;
 	}
 });
@@ -399,15 +366,6 @@ function encryptEmail () {
 		return;
 	}
 
-	// if (ob('attach').files.length > 0){
-	// 	if (checkFile()){
-	// 		alert('The maximum size of a single file is 25 MB and total size must less than 90 MB.');
-	// 		ob('btnEncrypt').classList.remove('loading');
-	// 		ob('btnEncrypt').removeAttribute('disabled');
-	// 		return;
-	// 	}
-	// }
-
 	// Encrypt email for recipients.
 	for (var i = 0; i < recipients.length; i++) {
 		var recipient = recipients[i];
@@ -429,12 +387,7 @@ function encryptEmail () {
 				document.getElementsByTagName("iframe")[0].contentWindow.document.body.innerHTML = encryptedEmailContent;
 			}
 			clearInterval(interval);
-			// jQuery('#encrypted').fadeIn();
 			log('done');
-			// if (ob('attach').files.length < 1){
-			// 	ob('btnEncrypt').classList.remove('loading');
-			// 	ob('btnEncrypt').removeAttribute('disabled');
-			// }
 		}
 	}, 1);
 }
@@ -458,12 +411,4 @@ function ee (recipient, plainText, obj) {
 	var cipher = cryptico.encrypt(unescape(encodeURIComponent(plainText)), publicKey);
 	encryptedEmailContent += preEncrypt(cipher.cipher + '|' + recipient) + STR_SEPERATOR;
 	encryptedEmail++;
-
-	// Attachments should be encrypted 1 single time.
-	// if (obj.ef == 0){
-	// 	if (ob('attach').files.length > 0){
-	// 		// encryptFile();
-	// 		obj.ef = 1;
-	// 	}
-	// }
 }
