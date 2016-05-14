@@ -231,7 +231,12 @@ function clickHandler() {
 
 			// Now extension can start encrypting email.
 			console.log('start encrypting');
-			encryptEmail();
+			chrome.runtime.sendMessage({actionType: "get-aes-key-file"}, function (response) {
+				aesKeyFile = response.aesKeyFile;
+				console.log('aesKeyFile get from background');
+				console.log(aesKeyFile);
+				encryptEmail();
+			});
 			console.log('done');
 		}
 	}, 1000);

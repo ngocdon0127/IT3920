@@ -4,6 +4,9 @@ var STORAGE_AREA = chrome.storage.local;
 // id of Gmail tab.
 var sourceTabId = '';
 
+// use this key to encrypt and decrypt attachment.
+var aesKeyFile = '';
+
 chrome.browserAction.onClicked.addListener(function (tab) {
 	chrome.tabs.create({url: '/src/key-list.html'}, function (tab) {
 		// body...
@@ -40,7 +43,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				});
 			}
 			else if (msg.actionType === 'send-aes-key-file-to-background'){
-				var aesKeyFile = msg.aesKeyFile;
+				aesKeyFile = msg.aesKeyFile;
 				chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
 					chrome.tabs.sendMessage(sourceTabId, {actionType: 'send-aes-key-file-to-content-script', aesKeyFile: aesKeyFile}, function (response) {
 						
@@ -247,6 +250,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		// open email editor.
 		chrome.windows.create({
 			url: '/src/add-attachments.html'
+		});
+	}
+	else if (request.actionType === 'get-aes-key-file'){
+		sendResponse({
+			aesKeyFile: aesKeyFile
 		});
 	}
 	return true;  // call sendResponse async - very important
