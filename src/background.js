@@ -151,7 +151,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		var data = request;
 		console.log(data);
 		$.ajax({
-			url: 'http://localhost:8080/E2EE/user/checkExistedUsers',
+			url: SERVER + SERVER_PORT + '/E2EE/user/checkExistedUsers',
 			type: 'POST',
 			data: JSON.stringify(data),
 			beforeSend: function(xhr) {
@@ -175,7 +175,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		
 		var data = request;
 		$.ajax({ 
-			url: 'http://localhost:' + SERVER_PORT + '/E2EE/key/requestPublicKey', 
+			url: SERVER + SERVER_PORT + '/E2EE/key/requestPublicKey', 
 			type: 'POST', 
 			dataType: 'json', 
 			data: JSON.stringify(data),
@@ -213,7 +213,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			ru[i].encryptedPrivateKey = rsa.private;
 		}
 		jQuery.ajax({
-			url: 'http://localhost:' + SERVER_PORT + '/E2EE/user/registerUsers',
+			url: SERVER + SERVER_PORT + '/E2EE/user/registerUsers',
 			type: 'POST',
 			data: JSON.stringify(data),
 			beforeSend: function(xhr) {

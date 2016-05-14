@@ -42,7 +42,7 @@ $('#btnLogIn').on('click', function () {
 		'password': hashedPassword
 	}
 	$.ajax({ 
-		url: 'http://localhost:8080/E2EE/user/login', 
+		url: SERVER + SERVER_PORT + '/E2EE/user/login', 
 		type: 'POST', 
 		dataType: 'json', 
 		data: JSON.stringify(data),
@@ -138,7 +138,7 @@ $('#btnReg').on('click', function () {
 	console.log(data);
 	
 	$.ajax({ 
-		url: 'http://localhost:8080/E2EE/user/register', 
+		url: SERVER + SERVER_PORT + '/E2EE/user/register', 
 		type: 'POST', 
 		dataType: 'json', 
 		data: JSON.stringify(data),

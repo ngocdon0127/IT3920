@@ -2,7 +2,7 @@
 
 // Master key.
 // Extension use this key to encrypt original public & private key with AES algorithm.
-// generate using MD5('local_key_extension_attt')
+// generated using MD5('local_key_extension_attt')
 var LOCAL_KEY = '8499a08c77ba81cd35d8e93642da34b6';
 
 // Extension saves data to this StorageArea
@@ -21,8 +21,11 @@ var ALIGN_OPEN_TAG = "<pre>";
 
 var ALIGN_CLOSE_TAG = "</pre>";
 
+// Server URL
+var SERVER = 'http://localhost';
+
 // Server run at this port
-var SERVER_PORT = '8080';
+var SERVER_PORT = ':8080';
 
 /**
  * Short hand
