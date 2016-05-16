@@ -99,6 +99,9 @@ function decryptFile () {
 // connect to background page
 var port = chrome.extension.connect({name: "Retrieve decrypted email"});
 port.onMessage.addListener(function(msg) {
+
+	// reset
+	singleEmails = {};
 	
 	if (!msg.hasOwnProperty('data')){
 		return;
@@ -110,36 +113,6 @@ port.onMessage.addListener(function(msg) {
 	$('#text').text(deAlignEmail(d));
 	$('#text').val(deAlignEmail(d));
 
-	// insert data to select#slRecipients
-	var contents = ob('text').value.split(STR_SEPERATOR);
-	contents.forEach(function (content) {
-		var c = '';
-		try{
-			c = preDecrypt(content);
-		}
-		catch (e){
-			alert('Email is corrupted.');
-			window.close();
-			return;
-		}
-
-		// each element of contents is a email for 1 recipient.
-		// in format:
-		// cipher|recipient.
-		// Example: CtnIuSOas...QkK240ieyL8/VHE|ngocdon127@gmail.com
-		var data = c.split('|');
-		console.log(data);
-		if (data.length < 2){
-			alert('Email content is corrupted.');
-			// window.close();
-			return;
-		}
-		var emailContent = data[0]; // what???
-		var recipient = data[1];
-
-		// fill data to singleEmails object
-		singleEmails[recipient] = content;
-	})
 });
 
 /**
@@ -214,8 +187,60 @@ function decryptEmail(data) {
 }
 
 ob('btnDecrypt').addEventListener('click', function () {
-	// console.log('My email is ' + user.email);
-	decryptEmail(singleEmails[user.email]);
+
+	// insert data to select#slRecipients
+	var contents = ob('text').value.split(STR_SEPERATOR);
+	contents.forEach(function (content) {
+		var c = '';
+		try{
+			c = preDecrypt(content);
+		}
+		catch (e){
+			console.log('1 single email corrupted.');
+			// window.close();
+			return;
+		}
+
+		// each element of contents is a email for 1 recipient.
+		// in format:
+		// cipher|recipient.
+		// Example: CtnIuSOas...QkK240ieyL8/VHE|ngocdon127@gmail.com
+		var data = c.split('|');
+		if (data.length < 2){
+			console.log('1 single email content corrupted.');
+			// window.close();
+			return;
+		}
+		var emailContent = data[0]; // what???
+		var recipient = data[1];
+
+		// fill data to singleEmails object
+		singleEmails[recipient] = content;
+	});
+
+	console.log(Object.keys(singleEmails));
+	console.log(user.email);
+
+	if (!user.hasOwnProperty("email") || (typeof(user.email) == 'undefined')){
+		alert("Login first.");
+		setTimeout(function () {
+			ob('btnDecrypt').classList.remove('loading');
+			ob('btnDecrypt').removeAttribute('disabled');
+		}, 500);
+		return;
+	}
+
+	if (singleEmails.hasOwnProperty(user.email)){
+		decryptEmail(singleEmails[user.email]);
+	}
+	else {
+		alert("This email wasn't encrypted for " + user.email);
+		setTimeout(function () {
+			ob('btnDecrypt').classList.remove('loading');
+			ob('btnDecrypt').removeAttribute('disabled');
+		}, 500);
+	}
+
 });
 
 // Add loading effect
