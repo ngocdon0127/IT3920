@@ -79,19 +79,16 @@ function decryptFile () {
 				try{
 					blob = dataURLToBlob(data);
 					saveAs(blob, filename);
-					ob('btnDecrypt').classList.remove('loading');
-					ob('btnDecrypt').removeAttribute('disabled');
+					removeAnimation(0);
 				}
 				catch (e){
 					alert('Invalid key.');
-					ob('btnDecrypt').classList.remove('loading');
-					ob('btnDecrypt').removeAttribute('disabled');
+					removeAnimation(0);
 				}
 			}
 			dw.terminate();
 			dw = undefined;
-			ob('btnDecrypt').classList.remove('loading');
-			ob('btnDecrypt').removeAttribute('disabled');
+			removeAnimation(0);
 		}
 	}
 }
@@ -167,10 +164,7 @@ function decryptEmail(data) {
 
 			// without decrypting files, extension can decrypt email very fast.
 			// => let it animate in a short time before reverting it to the original state.
-			setTimeout(function () {
-				ob('btnDecrypt').classList.remove('loading');
-				ob('btnDecrypt').removeAttribute('disabled');
-			}, 500);
+			removeAnimation(500);
 			// console.log('remove loading UI effect');
 		}
 		else{
@@ -181,8 +175,7 @@ function decryptEmail(data) {
 	}
 	catch (e){
 		alert('Email is corrupted or invalid passphrase.');
-		ob('btnDecrypt').classList.remove('loading');
-		ob('btnDecrypt').removeAttribute('disabled');
+		removeAnimation(0);
 	}
 }
 
@@ -218,15 +211,9 @@ ob('btnDecrypt').addEventListener('click', function () {
 		singleEmails[recipient] = content;
 	});
 
-	console.log(Object.keys(singleEmails));
-	console.log(user.email);
-
 	if (!user.hasOwnProperty("email") || (typeof(user.email) == 'undefined')){
 		alert("Login first.");
-		setTimeout(function () {
-			ob('btnDecrypt').classList.remove('loading');
-			ob('btnDecrypt').removeAttribute('disabled');
-		}, 500);
+		removeAnimation(500);
 		return;
 	}
 
@@ -235,13 +222,22 @@ ob('btnDecrypt').addEventListener('click', function () {
 	}
 	else {
 		alert("This email wasn't encrypted for " + user.email);
-		setTimeout(function () {
-			ob('btnDecrypt').classList.remove('loading');
-			ob('btnDecrypt').removeAttribute('disabled');
-		}, 500);
+		removeAnimation(500);
 	}
 
 });
 
 // Add loading effect
 ob('btnDecrypt').addEventListener('click', BUTTON_LOADING);
+
+// remove animation of button decrypt
+
+function removeAnimation (time) {
+	var time = parseInt(time);
+	if (time < 0) 
+		time = 0;
+	setTimeout(function () {
+		ob('btnDecrypt').classList.remove('loading');
+		ob('btnDecrypt').removeAttribute('disabled');
+	}, time);
+}

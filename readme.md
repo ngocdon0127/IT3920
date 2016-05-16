@@ -1,5 +1,5 @@
 # Chrome Extension
-## Send Email with attachments via [Gmail](https://mail.google.com) and [Hust Mail](http://mail.hust.edu.vn) in a safe way.
+## Send Email with attachments via [Gmail](https://mail.google.com) and [Hust Mail](http://mail.hust.edu.vn) in a safe way using AES and RSA.
 -----
 
 ### Dependences
