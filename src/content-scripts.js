@@ -130,8 +130,22 @@ function clickHandler() {
 	}
 
 	myEmail = getEmailAddress();
-	if ((recipients.indexOf(myEmail) < 0) && (typeof(myEmail) != 'undefined')){
-		recipients.push(myEmail);
+	if (myEmail){
+		if (recipients.indexOf(myEmail) < 0){
+			recipients.push(myEmail);
+		}
+	}
+	else if (user.isLoggedIn == 1){
+		myEmail = user.email;
+		if (myEmail && (recipients.indexOf(myEmail) < 0)){
+			recipients.push(myEmail);
+		}
+	}
+	else{
+		myEmail = prompt('Could not detect your email address. You need to enter your email address in order to be able to read this email in the future.');
+		if (myEmail && (recipients.indexOf(myEmail) < 0)){
+			recipients.push(myEmail);
+		}
 	}
 	noOfRecipients = recipients.length;
 	if (MAIL_SERVICE === GMAIL){
@@ -403,6 +417,8 @@ function ee (recipient, plainText, obj) {
 
 	var data = preDecrypt(publicKeys[recipient]);
 	data = data.split('|');
+	console.log(data[1]);
+	console.log(recipient);
 	if (data[1] != recipient){
 		alert('Email is not matched.');
 		return;
