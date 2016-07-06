@@ -25,6 +25,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			type: 'panel'
 		});
 	}
+	// else if (request.actionType == 'decrypt-email'){
+	// 	console.log('catch decrypt-email in above');
+	// 	clickHandler(request.cipher);
+	// }
 
 	// email editor window establishes a port to request email content from Gmail tab.
 	chrome.extension.onConnect.addListener(function (port) {
@@ -67,6 +71,9 @@ function clickHandler (data, tab) {
 		url: "/src/decrypt-email.html",
 		// type: "panel"
 	});
+	if ((typeof(data) == 'object') && ('selectionText' in data) && data.selectionText.length > 0){
+		data = data.selectionText;
+	}
 	chrome.extension.onConnect.addListener(function(port) {
 		port.postMessage({
 
@@ -75,7 +82,7 @@ function clickHandler (data, tab) {
 			 * sometimes appears in selectionText when user double click.
 			 * remove it and trim() string before sending to decrypt-email.html
 			 */
-			data: data.selectionText.replace(/\u200B/g, '').trim()
+			data: data.replace(/\u200B/g, '').trim()
 		});
 	});
 }
@@ -256,6 +263,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		sendResponse({
 			aesKeyFile: aesKeyFile
 		});
+	}
+	else if (request.actionType == 'decrypt-email'){
+		console.log('catch decrypt-email in under');
+		console.log(request.cipher);
+		clickHandler(request.cipher);
 	}
 	return true;  // call sendResponse async - very important
 })

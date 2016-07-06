@@ -69,6 +69,165 @@ chrome.runtime.sendMessage({
 	}
 );
 
+if (MAIL_SERVICE == GMAIL){
+	/**
+	 * Detect when inbox is about to loaded.
+	 *
+	 */
+	setInterval(function () {
+		if (/\#inbox\/.+$/.test(window.location.href)){
+			// console.log('run direct');
+			emailRowClickHandler();
+		}
+		else{
+			emailRowClickHandlerFlag = false;
+		}
+	}, 1000);
+}
+else if (MAIL_SERVICE == HUST_MAIL){
+	setInterval(function () {
+		var div = top.frames["Main"].document.getElementsByClassName('Fixed');
+		// console.log(div);
+		if (div.length > 0){
+			div = div[0];
+			// console.log(div);
+			// div.ltr
+			if (div.children.length > 0){
+				div = div.children[0];
+				// console.log(div);
+				// console.log(div.nodeName.toLowerCase());
+				// console.log(div.getAttribute('dir').toLowerCase());
+				if ((div.nodeName.toLowerCase() == 'div') && (div.getAttribute('dir').toLowerCase() == 'ltr')){
+					var canAdd = true;
+					for (var i = 0; i < div.children.length; i++) {
+						var e = div.children[i];
+						try{
+							if ((e.nodeName.toLowerCase() == 'input') && (e.getAttribute('btnClass').localeCompare('btnDecrypt') == 0)){
+								canAdd = false;
+							}
+						}
+						catch(err){
+							canAdd = false;
+						}
+					}
+					if (canAdd){
+						var pre = div.children[0];
+						// console.log(pre);
+						var btn = document.createElement('input');
+						btn.setAttribute('type', 'button');
+						btn.setAttribute('value', 'Decrypt');
+						var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
+						btn.setAttribute('cipher', cipher);
+						btn.addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher));
+						// console.log(cipher);
+						div.appendChild(btn);
+						console.log('added');
+					}
+				}
+			}
+		}
+	}, 1000);
+}
+
+/**
+ * Because the above interval will run permanently,
+ * many click handlers will be added to one email row.
+ * So, each time user click in one email row, emailRowClickHandler will be invoked many time.
+ * Because of that, we need a flag to make sure that emailRowClickHandler will run exactly one single time.
+ */
+var emailRowClickHandlerFlag = false;
+
+// If user paste a email url directly in address bar,
+// we need to run emailRowClickHandler directly instead of listening a click event from clicking email row.
+
+
+/**
+ * email row click handler
+ *
+ */
+function emailRowClickHandler () {
+	// console.log(emailRowClickHandlerFlag);
+	if (emailRowClickHandlerFlag){
+		return;
+	}
+	emailRowClickHandlerFlag = true;
+	// To make sure email is loaded, delay 2s before doing anything.
+	setTimeout(function () {
+		// Maybe user click on a discussion, not a single email.
+		// so we have to run the following code many time.
+		setInterval(function () {
+			var divs = document.getElementsByClassName('adP adO');
+			for (var i = 0; i < divs.length; i++) {
+				// check if button exist
+				var canAdd = true;
+				try{
+					var btn = divs[i];
+					if (btn.children.length > 0){
+						btn = btn.children[0];
+					}
+					else{
+						canAdd = false;
+						throw new Error();
+					}
+					if (btn.children.length > 0){
+						btn = btn.children[0];
+					}
+					else{
+						canAdd = false;
+						throw new Error();
+					}
+					if (btn.children.length > 1){
+						btn = btn.children[1];
+						if (btn.getAttribute('btnClass').localeCompare('btnDecrypt') == 0){
+							canAdd = false;
+						}
+					}
+					else{
+						if ((btn.children.length > 0) && (btn.children[0].nodeName.localeCompare('pre'))){
+							canAdd = true;
+						}
+						else{
+							canAdd = false;
+						}
+						throw new Error();
+					}
+
+				}
+				catch(e){
+					// don't care
+				}
+				finally{
+					if (canAdd){
+						var btn = document.createElement('input');
+						btn.setAttribute('type', 'button');
+						btn.setAttribute('value', 'Decrypt');
+						btn.setAttribute('btnClass', 'btnDecrypt');
+						var cipher = divs[i].children[0].children[0].children[0].innerHTML.replace(/[<][^>]*[>]/g, '')
+						btn.setAttribute('cipher', cipher);
+						btn.addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher));
+						// console.log(cipher);
+						divs[i].children[0].children[0].appendChild(btn);
+						// console.log('added');
+					}
+					else{
+						// console.log('exist, d\' add');
+					}
+				}
+			}
+		}, 1000)
+	}, 2000)
+}
+
+/**
+ * Send cipher to decrypt-frame
+ */
+function sendCipherToDecryptFrame (cipher) {
+	// console.log(cipher);
+	chrome.runtime.sendMessage({actionType: 'decrypt-email', cipher: cipher}, function (response) {
+		// console.log(response);
+	})
+}
+
 /**
  * Get all recipients
  *
