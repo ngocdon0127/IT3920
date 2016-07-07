@@ -250,7 +250,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		});
 	}
 	else if (request.actionType === 'open-add-attachments-frame'){
-		// Save Gmail tab id.
+		// Save Mail tab id.
 		chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
 			sourceTabId = tabs[0].id;
 		});

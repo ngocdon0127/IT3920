@@ -132,7 +132,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 /**
  * Because the above interval will run permanently,
  * many click handlers will be added to one email row.
- * So, each time user click in one email row, emailRowClickHandler will be invoked many time.
+ * So, each time user click in one email row, emailRowClickHandler will be invoked many times.
  * Because of that, we need a flag to make sure that emailRowClickHandler will run exactly one single time.
  */
 var emailRowClickHandlerFlag = false;
@@ -176,21 +176,32 @@ function emailRowClickHandler () {
 						canAdd = false;
 						throw new Error();
 					}
-					if (btn.children.length > 1){
-						btn = btn.children[1];
-						if (btn.getAttribute('btnClass').localeCompare('btnDecrypt') == 0){
+					// if (btn.children.length > 1){
+					// 	btn = btn.children[1];
+					// 	if (btn.getAttribute('btnClass').localeCompare('btnDecrypt') == 0){
+					// 		canAdd = false;
+					// 	}
+					// }
+					for (var j = 0; j < btn.children.length; j++) {
+						var e = btn.children[j];
+						try{
+							if ((e.nodeName.toLowerCase() == 'input') && (e.getAttribute('btnClass').localeCompare('btnDecrypt') == 0)){
+								canAdd = false;
+							}
+						}
+						catch(err){
 							canAdd = false;
 						}
 					}
-					else{
-						if ((btn.children.length > 0) && (btn.children[0].nodeName.localeCompare('pre'))){
-							canAdd = true;
-						}
-						else{
-							canAdd = false;
-						}
-						throw new Error();
-					}
+					// else{
+					// 	if ((btn.children.length > 0) && (btn.children[0].nodeName.localeCompare('pre'))){
+					// 		canAdd = true;
+					// 	}
+					// 	else{
+					// 		canAdd = false;
+					// 	}
+					// 	throw new Error();
+					// }
 
 				}
 				catch(e){
@@ -202,7 +213,7 @@ function emailRowClickHandler () {
 						btn.setAttribute('type', 'button');
 						btn.setAttribute('value', 'Decrypt');
 						btn.setAttribute('btnClass', 'btnDecrypt');
-						var cipher = divs[i].children[0].children[0].children[0].innerHTML.replace(/[<][^>]*[>]/g, '')
+						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
 						btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher));
 						// console.log(cipher);
@@ -395,6 +406,7 @@ function clickHandler() {
 
 			// Now extension can start encrypting email.
 			console.log('start encrypting');
+			// console.log(recipients);
 			chrome.runtime.sendMessage({actionType: "get-aes-key-file"}, function (response) {
 				aesKeyFile = response.aesKeyFile;
 				console.log('aesKeyFile get from background');
@@ -514,6 +526,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	}
 	else if (request.actionType === 'send-aes-key-file-to-content-script'){
 		aesKeyFile = request.aesKeyFile;
+		// console.log('aesKeyFile: ' + aesKeyFile);
 	}
 });
 
@@ -586,4 +599,19 @@ function ee (recipient, plainText, obj) {
 	var cipher = cryptico.encrypt(unescape(encodeURIComponent(plainText)), publicKey);
 	encryptedEmailContent += preEncrypt(cipher.cipher + '|' + recipient) + STR_SEPERATOR;
 	encryptedEmail++;
+}
+
+function findPre (element) {
+	if (element.nodeName.toLowerCase().localeCompare('pre') == 0){
+		return element;
+	}
+	if (element.children.length < 1){
+		return false;
+	}
+	for (var i = 0; i < element.children.length; i++) {
+		var result = findPre(element.children[i])
+		if (result){
+			return result;
+		}
+	}
 }
