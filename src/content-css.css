@@ -8,3 +8,28 @@
     padding: 2px 5px;
 }
 
+
+.contentBtnDecrypt{
+    box-sizing: border-box;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    touch-action: manipulation;
+    vertical-align: middle;
+    white-space: nowrap;
+    column-rule-color: rgb(255, 255, 255);
+    perspective-origin: 31.5px 17px;
+    transform-origin: 31.5px 17px;
+    background: rgb(91, 192, 222) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 1px solid rgb(70, 184, 218);
+    border-radius: 4px 4px 4px 4px;
+    font: normal normal normal normal 14px / 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    outline: rgb(255, 255, 255) none 0px;
+    padding: 6px 12px;
+}
+
+.contentBtnDecrypt:hover{
+	background: rgb(101, 202, 232) none repeat scroll 0% 0% / auto padding-box border-box;
+}

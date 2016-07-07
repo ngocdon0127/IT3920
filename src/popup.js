@@ -1,5 +1,5 @@
 // connect to background page
-var port = chrome.extension.connect({name: "get-login-status"});
+var port = chrome.runtime.connect({name: "get-login-status"});
 
 // send message to get login status
 port.postMessage({

@@ -115,7 +115,8 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						// console.log(pre);
 						var btn = document.createElement('input');
 						btn.setAttribute('type', 'button');
-						btn.setAttribute('value', 'Decrypt');
+						btn.setAttribute('value', 'Decrypt this email');
+						btn.setAttribute('class', 'contentBtnDecrypt');
 						var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
 						btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher));
@@ -166,14 +167,12 @@ function emailRowClickHandler () {
 						btn = btn.children[0];
 					}
 					else{
-						canAdd = false;
 						throw new Error();
 					}
 					if (btn.children.length > 0){
 						btn = btn.children[0];
 					}
 					else{
-						canAdd = false;
 						throw new Error();
 					}
 					// if (btn.children.length > 1){
@@ -181,6 +180,15 @@ function emailRowClickHandler () {
 					// 	if (btn.getAttribute('btnClass').localeCompare('btnDecrypt') == 0){
 					// 		canAdd = false;
 					// 	}
+					// }
+					// else{
+					// 	if ((btn.children.length > 0) && (btn.children[0].nodeName.localeCompare('pre'))){
+					// 		canAdd = true;
+					// 	}
+					// 	else{
+					// 		canAdd = false;
+					// 	}
+					// 	throw new Error();
 					// }
 					for (var j = 0; j < btn.children.length; j++) {
 						var e = btn.children[j];
@@ -193,26 +201,18 @@ function emailRowClickHandler () {
 							canAdd = false;
 						}
 					}
-					// else{
-					// 	if ((btn.children.length > 0) && (btn.children[0].nodeName.localeCompare('pre'))){
-					// 		canAdd = true;
-					// 	}
-					// 	else{
-					// 		canAdd = false;
-					// 	}
-					// 	throw new Error();
-					// }
 
 				}
 				catch(e){
-					// don't care
+					canAdd = false;
 				}
 				finally{
 					if (canAdd){
 						var btn = document.createElement('input');
 						btn.setAttribute('type', 'button');
-						btn.setAttribute('value', 'Decrypt');
+						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('btnClass', 'btnDecrypt');
+						btn.setAttribute('class', 'contentBtnDecrypt');
 						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
 						btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher));
