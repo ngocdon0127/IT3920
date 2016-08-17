@@ -105,7 +105,7 @@ chrome.extension.onConnect.addListener(function (port){
 		if (msg.name == "get-login-status"){
 			STORAGE_AREA.get("info", function (items) {
 				console.log(items);
-				if (items.info.isLoggedIn == 1){
+				if (('info' in items) && ('isLoggedIn' in items.info) && (items.info.isLoggedIn == 1)){
 					port.postMessage({
 						name: 'login-status',
 						isLoggedIn: 1,
@@ -141,9 +141,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					isLoggedIn: 1,
 					email: items.info.email,
 					hashedPassword: items.info.hashedPassword,
-					publicKey: items.info.publicKey,
-					userId: items.info.userId,
-					encryptedPrivateKey: items.info.encryptedPrivateKey
+					// publicKey: items.info.publicKey,
+					// userId: items.info.userId,
+					// encryptedPrivateKey: items.info.encryptedPrivateKey
 				});
 			}
 			else{

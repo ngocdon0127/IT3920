@@ -12,7 +12,7 @@ port.onMessage.addListener(function (msg) {
 	if (msg.name === 'login-status'){
 		if (msg.isLoggedIn == 1){
 			// alert('ok');
-			ob('home').children[0].children[0].innerHTML = "<h2>" + msg.email + "</h2>";
+			ob('home').innerHTML = "<h2>" + msg.email + "</h2>";
 			var btn = document.createElement('button');
 			$(btn).addClass('btn btn-primary');
 			$(btn).text('Log out');
@@ -22,7 +22,7 @@ port.onMessage.addListener(function (msg) {
 					window.close();
 				})
 			});
-			ob('home').children[0].children[0].appendChild(btn);
+			ob('home').appendChild(btn);
 			// need to do something here to switch tab
 		}
 		else{
@@ -42,7 +42,7 @@ $('#btnLogIn').on('click', function () {
 		'password': hashedPassword
 	}
 	$.ajax({ 
-		url: SERVER + SERVER_PORT + '/E2EE/user/login', 
+		url: SERVER + SERVER_PORT + '/E2EE/user/verify', 
 		type: 'POST', 
 		dataType: 'json', 
 		data: JSON.stringify(data),
@@ -54,11 +54,14 @@ $('#btnLogIn').on('click', function () {
 		},
 		success: function(data) { 
 			// alert("success");
-			if ((data.hasOwnProperty('result')) && (data.result == 'Login Fail')){
-				alert("User or password is invalid");
+			console.log(data);
+			// return;
+			if (data.message.localeCompare('OK') != 0){
+				alert(data.message);
 				return;
 			}
-			ob('home').children[0].children[0].innerHTML = "<h2>" + data.email + "</h2>";
+			alert(JSON.stringify(data));
+			ob('home').innerHTML = "<h2>" + email + "</h2>";
 			var btn = document.createElement('button');
 			$(btn).addClass('btn btn-primary');
 			$(btn).text('Log out');
@@ -68,16 +71,17 @@ $('#btnLogIn').on('click', function () {
 					window.close();
 				})
 			});
-			ob('home').children[0].children[0].appendChild(btn);
+			ob('home').appendChild(btn);
 
 			var info = {
 				isLoggedIn: 1,
-				userId: data.userId,
-				email: data.email,
+				// userId: data.userId,
+				email: email,
 				hashedPassword: hashedPassword,
-				publicKey: data.publicKey,
-				encryptedPrivateKey: data.encryptedPrivateKey
+				// publicKey: data.publicKey,
+				// encryptedPrivateKey: data.encryptedPrivateKey
 			}
+			console.log(info);
 			STORAGE_AREA.set({info: info}, function () {
 				if (typeof(chrome.runtime.lastError) !== 'undefined'){
 					// alert("Could not save login info to chrome.");
@@ -91,6 +95,7 @@ $('#btnLogIn').on('click', function () {
 		},
 		error:function(data,status,er) { 
 			alert("error");
+			console.log(data);
 			// user = {};
 		}
 	});
@@ -126,13 +131,13 @@ $('#btnReg').on('click', function () {
 
 	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 
-	var key = generateRSAKey(email, hashedPassword, 1024);
+	// var key = generateRSAKey(email, hashedPassword, 1024);
 
 	var data = {
 		"email": email,
 		"password": hashedPassword,
-		"publicKey": key.public, 
-		"encryptedPrivateKey": key.private
+		// "publicKey": key.public, 
+		// "encryptedPrivateKey": key.private
 	}
 
 	console.log(data);
@@ -159,95 +164,34 @@ $('#btnReg').on('click', function () {
 	});
 });
 
-// dany santos
-function sign_up() {
-	var inputs = document.querySelectorAll('.input_form_sign');
-	document.querySelectorAll('.ul_tabs > li')[0].className="";
-	document.querySelectorAll('.ul_tabs > li')[1].className="active";
-	for (var i = 0; i < inputs.length ; i++  ) {
-		if(i == 2  ) {
-		} else {
-			document.querySelectorAll('.input_form_sign')[i].className = "input_form_sign d_block";
+$('#btnActive').on('click', function () {
+	var email = $('#active-email').val();
+	var password = $('#active-password').val();
+	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
+	var activeId = $('#active-id').val();
+	var data = {
+		email: email,
+		password: hashedPassword,
+		activeId: activeId
+	}
+	console.log(data);
+	$.ajax({ 
+		url: SERVER + SERVER_PORT + '/E2EE/user/active', 
+		type: 'POST', 
+		dataType: 'json', 
+		data: JSON.stringify(data),
+		beforeSend: function(xhr) {
+			xhr.setRequestHeader("Accept", "application/json");
+			xhr.setRequestHeader("Content-Type", "application/json");
+		},
+		success: function(data) { 
+			console.log(data);
+			console.log("success"); // Act here
+			return false;
+		},
+		error:function(data,status,er) { 
+			console.log(data);
+			console.log("error");
 		}
-	}
-	setTimeout( function() {
-		for (var d = 0; d < inputs.length ; d++  ) {
-			document.querySelectorAll('.input_form_sign')[d].className = "input_form_sign d_block active_inp";
-		}
-	}
-	,100 );
-	document.querySelector('.link_forgot_pass').style.opacity = "0";
-	document.querySelector('.link_forgot_pass').style.top = "-5px";
-	document.querySelector('.btn_sign').innerHTML = "SIGN UP";
-	setTimeout(function() {
-		document.querySelector('.terms_and_cons').style.opacity = "1";
-		document.querySelector('.terms_and_cons').style.top = "5px";
-	}
-	,500);
-	setTimeout(function() {
-		document.querySelector('.link_forgot_pass').className = "link_forgot_pass d_none";
-		document.querySelector('.terms_and_cons').className = "terms_and_cons d_block";
-	}
-	,450);
-}
-function sign_in() {
-	var inputs = document.querySelectorAll('.input_form_sign');
-	document.querySelectorAll('.ul_tabs > li')[0].className = "active";
-	document.querySelectorAll('.ul_tabs > li')[1].className = "";
-	for (var i = 0; i < inputs.length ; i++  ) {
-		switch(i) {
-			case 1:
-				console.log(inputs[i].name);
-				break;
-			case 2:
-				console.log(inputs[i].name);
-			default: 
-			document.querySelectorAll('.input_form_sign')[i].className = "input_form_sign d_block";
-		}
-	}
-	setTimeout( function() {
-		for (var d = 0; d < inputs.length ; d++  ) {
-			switch(d) {
-				case 1:
-						console.log(inputs[d].name);
-				break;
-				case 2:
-						console.log(inputs[d].name);
-				default:
-				document.querySelectorAll('.input_form_sign')[d].className = "input_form_sign d_block";
-				document.querySelectorAll('.input_form_sign')[2].className = "input_form_sign d_block active_inp";
-			}
-		}
-	}
-	,100 );
-	document.querySelector('.terms_and_cons').style.opacity = "0";
-	document.querySelector('.terms_and_cons').style.top = "-5px";
-	setTimeout(function() {
-		document.querySelector('.terms_and_cons').className = "terms_and_cons d_none";
-		document.querySelector('.link_forgot_pass').className = "link_forgot_pass d_block";
-	}
-	,500);
-	setTimeout(function() {
-		document.querySelector('.link_forgot_pass').style.opacity = "1";
-		document.querySelector('.link_forgot_pass').style.top = "5px";
-		for (var d = 0; d < inputs.length ; d++  ) {
-			switch(d) {
-				case 1:
-				 console.log(inputs[d].name);
-				break;
-				case 2:
-				 console.log(inputs[d].name);
-				break;
-				default:
-				 document.querySelectorAll('.input_form_sign')[d].className = "input_form_sign";
-			}
-		}
-	}
-	,1500);
-	document.querySelector('.btn_sign').innerHTML = "SIGN IN";
-}
-
-
-
-$('#li_sign_in').on('click', sign_in);
-$('#li_sign_up').on('click', sign_up);
+	});
+})
