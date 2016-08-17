@@ -228,7 +228,10 @@ function generateRSAKey (email, passphrase, bitlen) {
 	var originalEmail = email;
 
 	// generate a unique number
-	var date = (new Date()).getTime();
+	// var date = (new Date()).getTime();
+	//
+	// use function in cryptio
+	//
 
 	// convert email to string
 	email += ' ' + date;
