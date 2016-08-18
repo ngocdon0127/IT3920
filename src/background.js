@@ -215,7 +215,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 			// 123123 is implicit
 			ru[i].password = CryptoJS.MD5('123123').toString(CryptoJS.enc.Base16);
-			var rsa = generateRSAKey(ru[i].email, ru[i].password, 1024);
+			var rsa = generateRSAKey(ru[i].email, CryptoJS.MD5(ru[i].email).toString(CryptoJS.enc.Base16), ru[i].password, 1024);
 			ru[i].publicKey = rsa.public;
 			ru[i].encryptedPrivateKey = rsa.private;
 		}

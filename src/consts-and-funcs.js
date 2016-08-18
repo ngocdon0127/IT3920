@@ -223,9 +223,9 @@ function deAlignEmail (email) {
  *
  * @return {object} RSA Key
  */
-function generateRSAKey (email, passphrase, bitlen) {
+function generateRSAKey (email, seed, passphrase, bitlen) {
 
-	var originalEmail = email;
+	// var originalEmail = email;
 
 	// generate a unique number
 	// var date = (new Date()).getTime();
@@ -234,16 +234,16 @@ function generateRSAKey (email, passphrase, bitlen) {
 	//
 
 	// convert email to string
-	email += ' ' + date;
+	// email += ' ' + date;
 	
 	// encrypt email using MD5
-	email = CryptoJS.MD5(email).toString(CryptoJS.enc.Base16);
+	// email = CryptoJS.MD5(email).toString(CryptoJS.enc.Base16);
 
 	var key = {};
 
-	var RSAKey = cryptico.generateRSAKey(email, bitlen);
-	key.public = preEncrypt(cryptico.publicKeyString(RSAKey) + '|' + originalEmail);
-	var prepriv = preEncrypt(cryptico.privateKeyString(RSAKey) + '|' + originalEmail);
+	var RSAKey = cryptico.generateRSAKey(seed, bitlen);
+	key.public = preEncrypt(cryptico.publicKeyString(RSAKey) + '|' + email);
+	var prepriv = preEncrypt(cryptico.privateKeyString(RSAKey) + '|' + email);
 	key.private = CryptoJS.AES.encrypt(prepriv, passphrase).toString();
 	
 	return key;

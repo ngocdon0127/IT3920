@@ -73,14 +73,26 @@ $('#btnLogIn').on('click', function () {
 			});
 			ob('home').appendChild(btn);
 
+			var key = generateRSAKey(email, CryptoJS.MD5(email).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+
 			var info = {
 				isLoggedIn: 1,
 				// userId: data.userId,
 				email: email,
 				hashedPassword: hashedPassword,
-				// publicKey: data.publicKey,
-				// encryptedPrivateKey: data.encryptedPrivateKey
+				mainPublicKey: key.public,
+				encryptedMainPrivateKey: key.private
 			}
+
+			if (data.initialKey){
+
+				// server generates RSA key with 2048 bitlen.
+				// regenerate it here.
+				var initRSAKey = generateRSAKey(email, data.initialKey, hashedPassword, 2048);
+				info.tmpPublicKey = initRSAKey.public;
+				info.encryptedTmpPrivateKey = initRSAKey.private;
+			}
+
 			console.log(info);
 			STORAGE_AREA.set({info: info}, function () {
 				if (typeof(chrome.runtime.lastError) !== 'undefined'){
@@ -169,10 +181,12 @@ $('#btnActive').on('click', function () {
 	var password = $('#active-password').val();
 	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 	var activeId = $('#active-id').val();
+	var key = generateRSAKey(email, CryptoJS.MD5(email).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
 	var data = {
 		email: email,
 		password: hashedPassword,
-		activeId: activeId
+		activeId: activeId,
+		mainPublicKey: key.public
 	}
 	console.log(data);
 	$.ajax({ 
@@ -184,13 +198,15 @@ $('#btnActive').on('click', function () {
 			xhr.setRequestHeader("Accept", "application/json");
 			xhr.setRequestHeader("Content-Type", "application/json");
 		},
-		success: function(data) { 
+		success: function(data) {
+			alert(JSON.stringify(data));
 			console.log(data);
 			console.log("success"); // Act here
 			return false;
 		},
 		error:function(data,status,er) { 
 			console.log(data);
+			alert(JSON.stringify(data));
 			console.log("error");
 		}
 	});
