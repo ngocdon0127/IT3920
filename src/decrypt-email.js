@@ -259,8 +259,7 @@ ob('btnDecrypt').addEventListener('click', BUTTON_LOADING);
 
 function removeAnimation (time) {
 	var time = parseInt(time);
-	if (time < 0) 
-		time = 0;
+	(time < 0) ? (time = 0) : 0;
 	setTimeout(function () {
 		ob('btnDecrypt').classList.remove('loading');
 		ob('btnDecrypt').removeAttribute('disabled');

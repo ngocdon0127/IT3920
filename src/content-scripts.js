@@ -601,6 +601,13 @@ function encryptEmail () {
 			encryptedEmailContent = alignEmail(encryptedEmailContent);
 			if (MAIL_SERVICE === GMAIL){
 				document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML = encryptedEmailContent;
+				try {
+					document.getElementsByClassName('n1tfz')[0].children[0].children[0].children[1].click();
+				}
+				catch (e){
+					console.log(e);
+					alert('Something went wrong. You might need to click "Send" button yourself to send this message');
+				}
 			}
 			else if (MAIL_SERVICE === HUST_MAIL){
 				document.getElementsByTagName("iframe")[0].contentWindow.document.body.innerHTML = encryptedEmailContent;
