@@ -328,20 +328,41 @@ function clickHandler() {
 	// request public key
 
 	// need to check if recipient has E2EE account or not
-	var data = {};
-	if (!user.hasOwnProperty('userId')){
+	// var data = {};
+	var data = [];
+	if (!user.hasOwnProperty('email')){
 		alert("login first.");
 		return;
 	}
-	data['requestUser'] = {
-		userId: user.userId,
-		password: user.hashedPassword
-	};
+	// data['requestUser'] = {
+	// 	userId: user.userId,
+	// 	password: user.hashedPassword
+	// };
 	var users = [];
 	for (var i = 0; i < recipients.length; i++) {
-		users.push({'email': recipients[i]});
+		// users.push({'email': recipients[i]});
+		data.push(recipients[i]);
 	}
-	data['requestedUsers'] = users;
+
+	chrome.runtime.sendMessage({
+			actionType: 'request-public-key',
+			// requestUser: data['requestUser'],
+			requestedUsers: data,
+		},
+		function (response) {
+			if (response.name !== 'requested-public-keys'){
+				return;
+			}
+			console.log(response);
+			// save to global variable.
+			publicKeys = response.data;
+		}
+	)
+
+	// ========== old way ==========
+
+	// data['requestedUsers'] = users;
+	/*
 	chrome.runtime.sendMessage(
 		{
 			actionType: 'check-recipients-exist',
@@ -398,6 +419,9 @@ function clickHandler() {
 			)
 		}
 	);
+	*/
+
+	// ========== end of old way ==========
 
 	var intervalEncrypt = setInterval(function () {
 		console.log(Object.keys(publicKeys).length + " : " + noOfRecipients);
@@ -556,7 +580,16 @@ function encryptEmail () {
 	for (var i = 0; i < recipients.length; i++) {
 		var recipient = recipients[i];
 		log('start encrypting email for ' + recipient);
-		ee(recipient, plainText, flags);
+		try {
+			var data = preDecrypt(publicKeys[recipient]);
+		}
+		catch (e){
+			console.log(e);
+			publicKeys[recipient] = preEncrypt(publicKeys[recipient] + '|' + recipient);
+		}
+		finally {
+			ee(recipient, plainText, flags);
+		}
 	}
 	var interval = setInterval(function () {
 		log(encryptedEmail + ' / ' + noOfRecipients + ' done.');

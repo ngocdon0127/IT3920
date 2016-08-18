@@ -131,7 +131,7 @@ function decryptEmail(data) {
 	}
 	
 	// start decrypting
-	if (!user.hasOwnProperty('userId')){
+	if (!user.hasOwnProperty('email')){
 		alert("You have to log in first.");
 		return;
 	}
@@ -145,8 +145,26 @@ function decryptEmail(data) {
 		privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
 		privateKey = preDecrypt(privateKey);
 		// console.log('done privateKey');
-		var plainText = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
-		plainText = decodeURIComponent(escape(plainText.plaintext)).split('|');
+		var decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
+		console.log(decryptResult);
+		if (decryptResult.status.localeCompare('success') != 0){
+			privateKey = user.encryptedTmpPrivateKey;
+			// console.log(privateKey);
+			privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
+			privateKey = preDecrypt(privateKey);
+			// console.log('done privateKey');
+			decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
+			if (decryptResult.status.localeCompare('success') != 0){
+				alert("Cannot decrypt message with your Private Key");
+				return;
+			}
+			console.log('using tmp key');
+		}
+		else {
+			console.log('usin main key');
+		}
+		var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
+		console.log(plainText);
 
 		// plainText should consist of 1 or 2 parts.
 		// The first part is the original email Alice sends to Bob.

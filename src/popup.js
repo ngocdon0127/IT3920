@@ -79,9 +79,9 @@ $('#btnLogIn').on('click', function () {
 				isLoggedIn: 1,
 				// userId: data.userId,
 				email: email,
-				hashedPassword: hashedPassword,
-				mainPublicKey: key.public,
-				encryptedMainPrivateKey: key.private
+				// hashedPassword: hashedPassword,
+				publicKey: key.public,
+				encryptedPrivateKey: key.private
 			}
 
 			if (data.initialKey){

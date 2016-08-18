@@ -135,16 +135,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.actionType === 'get-login-status'){
 		STORAGE_AREA.get("info", function (items) {
 			console.log(items);
-			if (items.info.isLoggedIn == 1){
-				sendResponse({
-					name: 'login-status',
-					isLoggedIn: 1,
-					email: items.info.email,
-					hashedPassword: items.info.hashedPassword,
-					// publicKey: items.info.publicKey,
-					// userId: items.info.userId,
-					// encryptedPrivateKey: items.info.encryptedPrivateKey
-				});
+			if (('info' in items) && ('isLoggedIn' in items.info) && (items.info.isLoggedIn == 1)){
+				var result = items.info;
+				result.name = 'login-status';
+				result.isLoggedIn = 1;
+				sendResponse(result);
 			}
 			else{
 				sendResponse({
@@ -179,13 +174,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		})
 	}
 	else if (request.actionType === 'request-public-key'){
-		
+		console.log('receive request-public-key request');
 		var data = request;
 		$.ajax({ 
-			url: SERVER + SERVER_PORT + '/E2EE/key/requestPublicKey', 
+			url: SERVER + SERVER_PORT + '/E2EE/key/getPublicKeys', 
 			type: 'POST', 
 			dataType: 'json', 
-			data: JSON.stringify(data),
+			data: JSON.stringify(data.requestedUsers),
 			beforeSend: function(xhr) {
 				xhr.setRequestHeader("Accept", "application/json");
 				xhr.setRequestHeader("Content-Type", "application/json");
@@ -194,6 +189,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			},
 			success: function(data) { 
 				// alert("success");
+				console.log('server response');
 				console.log(data);
 				sendResponse({
 					name: 'requested-public-keys',
