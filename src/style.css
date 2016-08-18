@@ -1,11 +1,7 @@
-div[contentEditable="true"]{
+/*div[contentEditable="true"]{
 	border: 1px solid #ccc;
 	border-radius: 4px;
-}
-
-body {
-	padding-top:2em;
-}
+}*/
 
 button.btn-crypto {
 	position:relative;
@@ -81,3 +77,23 @@ button.btn-crypto.loading {
 	-ms-transform:rotateX(180deg);
 	transform:rotateX(180deg);
 }
+
+button.btn-hide {
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    height: 34px;
+    touch-action: manipulation;
+    vertical-align: middle;
+    white-space: nowrap;
+    width: 67px;
+    column-rule-color: rgb(255, 255, 255);
+    perspective-origin: 33.5px 17px;
+    transform-origin: 33.5px 17px;
+    background: rgb(240, 173, 78) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 1px solid rgb(238, 162, 54);
+    border-radius: 4px 4px 4px 4px;
+    font: normal normal normal normal 14px / 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 5px 0px 0px;
+    outline: rgb(255, 255, 255) none 0px;
+    padding: 6px 12px;
+}/*#I_1*/

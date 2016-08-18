@@ -35,9 +35,10 @@
 				"/crypto-js/build/rollups/aes.js",
 				"/crypto-js/build/components/enc-base64-min.js",
 				"/src/consts-and-funcs.js",
+				"/res/FileSaver.js",
 				"/src/content-scripts.js"
 			],
-			"css": ["/src/content-css.css"]
+			"css": ["/src/content-css.css", "/src/style.css"]
 		}
 	],
 	"background": {
@@ -60,5 +61,10 @@
 		"32": "/res/oie_transparent.png",
 		"64": "/res/oie_transparent.png",
 		"128": "/res/oie_transparent.png"
-	}
+	},
+	"web_accessible_resources": [
+		"/src/consts-and-funcs.js",
+		"/src/decrypt-email.js",
+		"/src/file-worker.js"
+	]
 }

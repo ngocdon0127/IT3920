@@ -1,7 +1,7 @@
 'use strict';
 
 // user info
-var user = {};
+// var user = {};
 
 // storage single email for 1 recipient
 // structure:
@@ -12,16 +12,16 @@ var user = {};
 // will be filled right after the time popup windows is created.
 var singleEmails = {};
 
-chrome.runtime.sendMessage({
-		actionType: 'get-login-status',
-	},
-	function (response) {
-		if (response.isLoggedIn == 1){
-			user = response;
-			console.log(user);
-		}
-	}
-)
+// chrome.runtime.sendMessage({
+// 		actionType: 'get-login-status',
+// 	},
+// 	function (response) {
+// 		if (response.isLoggedIn == 1){
+// 			user = response;
+// 			console.log(user);
+// 		}
+// 	}
+// )
 
 // Log data to console when user choose files.
 function handleFileSelect (event) {
@@ -94,23 +94,23 @@ function decryptFile () {
 }
 
 // connect to background page
-var port = chrome.extension.connect({name: "Retrieve decrypted email"});
-port.onMessage.addListener(function(msg) {
+// var port = chrome.extension.connect({name: "Retrieve decrypted email"});
+// port.onMessage.addListener(function(msg) {
 
-	// reset
-	singleEmails = {};
+// 	// reset
+// 	singleEmails = {};
 	
-	if (!msg.hasOwnProperty('data')){
-		return;
-	}
-	if (msg.data.length < 1){
-		return;
-	}
-	var d = msg.data;
-	$('#text').text(deAlignEmail(d));
-	$('#text').val(deAlignEmail(d));
+// 	if (!msg.hasOwnProperty('data')){
+// 		return;
+// 	}
+// 	if (msg.data.length < 1){
+// 		return;
+// 	}
+// 	var d = msg.data;
+// 	$('#text').text(deAlignEmail(d));
+// 	$('#text').val(deAlignEmail(d));
 
-});
+// });
 
 /**
  * Decrypt encrypted email
@@ -204,7 +204,17 @@ function decryptEmail(data) {
 	}
 }
 
-ob('btnDecrypt').addEventListener('click', function () {
+ob('btnDecrypt').addEventListener('click', btnDecryptClickHandler);
+
+var btnDecryptClickHandler = function (cipher) {
+
+	singleEmails = {};
+	
+	var d = cipher;
+	$('#text').text(deAlignEmail(d));
+	$('#text').val(deAlignEmail(d));
+
+	console.log('clicked decrypt button');
 
 	// insert data to select#slRecipients
 	var contents = ob('text').value.split(STR_SEPERATOR);
@@ -250,7 +260,7 @@ ob('btnDecrypt').addEventListener('click', function () {
 		removeAnimation(500);
 	}
 
-});
+}
 
 // Add loading effect
 ob('btnDecrypt').addEventListener('click', BUTTON_LOADING);
