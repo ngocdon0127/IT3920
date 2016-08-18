@@ -138,6 +138,8 @@ function decryptEmail(data) {
 
 	// Chrome has already storaged key pair of this email before.
 	try {
+
+		// use main key
 		var privateKey = user.encryptedPrivateKey;
 		// console.log(privateKey);
 		var passphrase = prompt('Enter passphrase of ' + data[1] + ':', '');
@@ -148,6 +150,11 @@ function decryptEmail(data) {
 		var decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
 		console.log(decryptResult);
 		if (decryptResult.status.localeCompare('success') != 0){
+			// if fail, use temp key.
+			if (!('encryptedTmpPrivateKey' in user)){
+				alert("Cannot decrypt message with your Private Key");
+				return;
+			}
 			privateKey = user.encryptedTmpPrivateKey;
 			// console.log(privateKey);
 			privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
@@ -161,7 +168,7 @@ function decryptEmail(data) {
 			console.log('using tmp key');
 		}
 		else {
-			console.log('usin main key');
+			console.log('using main key');
 		}
 		var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
 		console.log(plainText);
