@@ -6,7 +6,13 @@
 var LOCAL_KEY = '8499a08c77ba81cd35d8e93642da34b6';
 
 // Extension saves data to this StorageArea
-var STORAGE_AREA = chrome.storage.local;
+var STORAGE_AREA = '';
+try {
+	STORAGE_AREA = chrome.storage.local;
+}
+catch (e){
+	console.log(e);
+}
 
 // seperate file dataURL with this string. Need to be long and semantic enough.
 // Or, this can be some character which is not included in Base64 index table. 

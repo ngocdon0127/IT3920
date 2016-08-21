@@ -12,18 +12,7 @@ port.onMessage.addListener(function (msg) {
 	if (msg.name === 'login-status'){
 		if (msg.isLoggedIn == 1){
 			// alert('ok');
-			ob('home').innerHTML = "<h2>" + msg.email + "</h2>";
-			var btn = document.createElement('button');
-			$(btn).addClass('btn btn-primary');
-			$(btn).text('Log out');
-			$(btn).on('click', function () {
-				STORAGE_AREA.clear(function () {
-					alert('Signed Out.');
-					window.close();
-				})
-			});
-			ob('home').appendChild(btn);
-			// need to do something here to switch tab
+			replaceLoginForm(msg.email);
 		}
 		else{
 			// alert('no no');
@@ -31,6 +20,7 @@ port.onMessage.addListener(function (msg) {
 	}
 });
 
+ob('btnLogIn').addEventListener('click', BUTTON_LOADING);
 $('#btnLogIn').on('click', function () {
 	var email = $('#email').val();
 	var password = $('#password').val();
@@ -57,53 +47,81 @@ $('#btnLogIn').on('click', function () {
 			console.log(data);
 			// return;
 			if (data.message.localeCompare('OK') != 0){
-				alert(data.message);
+				console.log(data.message);
 				return;
 			}
-			alert(JSON.stringify(data));
-			ob('home').innerHTML = "<h2>" + email + "</h2>";
-			var btn = document.createElement('button');
-			$(btn).addClass('btn btn-primary');
-			$(btn).text('Log out');
-			$(btn).on('click', function () {
-				STORAGE_AREA.clear(function () {
-					alert('Signed Out.');
-					window.close();
+			// alert(JSON.stringify(data));
+
+			// Generate key in background
+
+			if (typeof(Worker) !== 'undefined'){
+				var keyWorker = new Worker('key-worker.js');
+				keyWorker.postMessage({
+					main: {
+						email: email,
+						seed: CryptoJS.MD5(email).toString(CryptoJS.enc.Base16),
+						passphrase: hashedPassword,
+						bitLen: 1024,
+					},
+					tmp: data.initialKey ? {
+						email: email,
+						seed: data.initialKey,
+						passphrase: hashedPassword,
+						bitLen: 2048
+					} : 0
+
 				})
-			});
-			ob('home').appendChild(btn);
 
-			var key = generateRSAKey(email, CryptoJS.MD5(email).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
-
-			var info = {
-				isLoggedIn: 1,
-				// userId: data.userId,
-				email: email,
-				// hashedPassword: hashedPassword,
-				publicKey: key.public,
-				encryptedPrivateKey: key.private
-			}
-
-			if (data.initialKey){
-
-				// server generates RSA key with 2048 bitlen.
-				// regenerate it here.
-				var initRSAKey = generateRSAKey(email, data.initialKey, hashedPassword, 2048);
-				info.tmpPublicKey = initRSAKey.public;
-				info.encryptedTmpPrivateKey = initRSAKey.private;
-			}
-
-			console.log(info);
-			STORAGE_AREA.set({info: info}, function () {
-				if (typeof(chrome.runtime.lastError) !== 'undefined'){
-					// alert("Could not save login info to chrome.");
-					return;
+				keyWorker.onmessage = function (event) {
+					// console.log(event.data);
+					// alert('Received Key from worker');
+					STORAGE_AREA.set({info: event.data}, function () {
+						if (typeof(chrome.runtime.lastError) !== 'undefined'){
+							// alert("Could not save login info to chrome.");
+							return;
+						}
+						else{
+							// alert("Save user info successfully.");
+							return;
+						}
+					})
+					replaceLoginForm(email);
 				}
-				else{
-					// alert("Save user info successfully.");
-					return;
+			}
+			else {
+				var key = generateRSAKey(email, CryptoJS.MD5(email).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+
+				var info = {
+					isLoggedIn: 1,
+					email: email,
+					publicKey: key.public,
+					encryptedPrivateKey: key.private
 				}
-			})
+
+				if (data.initialKey){
+
+					// server generates RSA key with 2048 bitlen.
+					// regenerate it here.
+					var initRSAKey = generateRSAKey(email, data.initialKey, hashedPassword, 2048);
+					info.tmpPublicKey = initRSAKey.public;
+					info.encryptedTmpPrivateKey = initRSAKey.private;
+				}
+
+				console.log(info);
+				// alert("OK generate key directly")
+
+				STORAGE_AREA.set({info: info}, function () {
+					if (typeof(chrome.runtime.lastError) !== 'undefined'){
+						// alert("Could not save login info to chrome.");
+						return;
+					}
+					else{
+						// alert("Save user info successfully.");
+						return;
+					}
+				})
+				replaceLoginForm(email);
+			}
 		},
 		error:function(data,status,er) { 
 			alert("error");
@@ -112,6 +130,22 @@ $('#btnLogIn').on('click', function () {
 		}
 	});
 });
+
+function replaceLoginForm (email) {
+	ob('home').innerHTML = "<h2>" + email + "</h2>";
+	var btn = document.createElement('button');
+	$(btn).addClass('btn btn-primary');
+	$(btn).text('Log out');
+	$(btn).on('click', function () {
+		STORAGE_AREA.clear(function () {
+			// alert('Signed Out.');
+			setTimeout(function () {
+				window.close();
+			}, 500)
+		})
+	});
+	ob('home').appendChild(btn);
+}
 
 $('#btnReg').on('click', function () {
 
