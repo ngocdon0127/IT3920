@@ -717,7 +717,9 @@ function encryptEmail () {
 			var data = preDecrypt(publicKeys[recipient]);
 		}
 		catch (e){
+			console.log('=== encrypt with initial key will throw an error ===');
 			console.log(e);
+			console.log('=== but it doesn\'t matter ===');
 			publicKeys[recipient] = preEncrypt(publicKeys[recipient] + '|' + recipient);
 		}
 		finally {
@@ -854,14 +856,27 @@ function decryptFile (extraId) {
 
 	if (typeof(Worker) !== 'undefined'){
 		if (typeof(dw) == 'undefined'){
+
+			// From content-script, we cannot construct Worker like this.
+			// dw = new Worker('file-worker.js');
+
+			// We can add file-worker.js to web_accessible_resources in manifest.json,
+			// So that, we can construct Worker like this.
+			// dw = new Worker('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/file-worker.js');
+
+			// But browser does not understand what FileReader is, 
+			// because it thinks file-worker.js is just a normal JavaScript file, not a Worker.
+
+			// So we need to inject Worker's source code direct into Gmail Tab 's source
+			// After that, we can construct worker from injected code, 
+			// and tell the browser that code is javascript/worker
 			var blob = new Blob([
 				document.querySelector('#inlineWorker').textContent
 			], { type: "text/javascript" })
 
 			// Note: window.webkitURL.createObjectURL() in Chrome 10+.
-			var worker = new Worker(window.URL.createObjectURL(blob));
+			// var worker = new Worker(window.URL.createObjectURL(blob));
 			dw = new Worker(window.URL.createObjectURL(blob));
-			// dw = new Worker('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/file-worker.js');
 			dw.postMessage({
 				type: 'decrypt',
 				file: ob('attach-' + extraId).files[0],
@@ -1030,7 +1045,12 @@ function removeAnimation (time, extraId) {
 	}, time);
 }
 
-// inline worker
+// ======================== CryptoJS - AES =====================
+// cannot seperate in another file.
+// So we need to copy and paste it here.
+
+// ========== Start of workerString ==========
+// inline worker source. We save it in a multiple-line-string - workerString
 var workerString = `
 // importScripts('/crypto-js/build/rollups/aes.js');
 // importScripts('/crypto-js/build/components/enc-base64-min.js');
@@ -1081,6 +1101,8 @@ code.google.com/p/crypto-js/wiki/License
 (function(){var h=CryptoJS,j=h.lib.WordArray;h.enc.Base64={stringify:function(b){var e=b.words,f=b.sigBytes,c=this._map;b.clamp();b=[];for(var a=0;a<f;a+=3)for(var d=(e[a>>>2]>>>24-8*(a%4)&255)<<16|(e[a+1>>>2]>>>24-8*((a+1)%4)&255)<<8|e[a+2>>>2]>>>24-8*((a+2)%4)&255,g=0;4>g&&a+0.75*g<f;g++)b.push(c.charAt(d>>>6*(3-g)&63));if(e=c.charAt(64))for(;b.length%4;)b.push(e);return b.join("")},parse:function(b){var e=b.length,f=this._map,c=f.charAt(64);c&&(c=b.indexOf(c),-1!=c&&(e=c));for(var c=[],a=0,d=0;d<
 e;d++)if(d%4){var g=f.indexOf(b.charAt(d-1))<<2*(d%4),h=f.indexOf(b.charAt(d))>>>6-2*(d%4);c[a>>>2]|=(g|h)<<24-8*(a%4);a++}return j.create(c,a)},_map:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="}})();
 
+// ====================== End of CryptoJS - AES component ==========================
+// Our own worker
 
 // seperator file dataURL with this string. Need to be long and semantic enough.
 // Or, this can be some character which is not included in Base64 index table. 
@@ -1172,6 +1194,9 @@ onmessage = function (msg) {
 }
 `;
 
+// ========== End of workerString ==========
+
+// Inject worker to Gmail source.
 var workerTag = document.createElement('script');
 workerTag.id = 'inlineWorker';
 workerTag.setAttribute('type', 'javascript/worker');
