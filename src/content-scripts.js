@@ -422,7 +422,7 @@ function emailRowClickHandler () {
 						console.log('added');
 						var frameDecrypt = `
 							<div class="form-group">
-								<label for="attach-` + extraId + `">Choose *.encrypted file to decrypt</label><br />
+								<label for="attach-` + extraId + `" class="e2eelabel">Choose *.encrypted file to decrypt</label><br />
 								<input type="file" class="attach" name="attach" id="attach-` + extraId + `">
 							</div>
 							<div class="form-group">
