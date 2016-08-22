@@ -216,7 +216,7 @@ $('#btnActive').on('click', function () {
 	var password = $('#active-password').val();
 	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 	var activeId = $('#active-id').val();
-	var key = generateRSAKey(email, CryptoJS.MD5(email).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+	var key = generateRSAKey(email, CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
 	var data = {
 		email: email,
 		password: hashedPassword,
