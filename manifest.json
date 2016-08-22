@@ -38,7 +38,7 @@
 				"/res/FileSaver.js",
 				"/src/content-scripts.js"
 			],
-			"css": ["/src/content-css.css", "/src/style.css"]
+			"css": ["/src/style.css", "/src/content-css.css"]
 		}
 	],
 	"background": {

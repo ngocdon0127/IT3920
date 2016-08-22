@@ -64,9 +64,12 @@ jQuery.loadScript = function (url, callback) {
 }
 
 // button to render extension frame
-var e = document.createElement('div');
+var e = document.createElement('button');
 e.innerHTML = 'Encrypt';
+e.setAttribute('data-label', "Encrypt");
 e.id = 'eframe-cryptojs';
+e.class = 'btn-crypto';
+e.addEventListener('click', BUTTON_LOADING);
 e.addEventListener('click', clickHandler);
 
 // check login status
@@ -249,7 +252,7 @@ function emailRowClickHandler () {
 						btn.setAttribute('type', 'button');
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('btnClass', 'btnDecrypt');
-						btn.setAttribute('class', 'contentBtnDecrypt');
+						btn.setAttribute('class', 'contentBtnDecrypt btn btn-primary');
 						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
 						// btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', function () {
@@ -261,20 +264,17 @@ function emailRowClickHandler () {
 						var frameDecrypt = `
 							<div class="form-group">
 								<label for="attach-` + extraId + `">Choose *.encrypted file to decrypt</label><br />
-								<input type="file" name="attach" id="attach-` + extraId + `">
+								<input type="file" class="attach" name="attach" id="attach-` + extraId + `">
 							</div>
 							<div class="form-group">
 								<button position="` + i + `" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
 							</div>
 							<div class="form-group">
-								<button  id="btnHide-` + extraId + `" class="btn-hide">Hide</button>
-							</div>
-							<div class="form-group">
-								<div contenteditable="true" id="decrypted" style="display: none"></div>
+								<button  id="btnHide-` + extraId + `" class="btn-waring btn-hide">Hide</button>
 							</div>`;
 						// console.log(frameDecrypt);
 						var wrapper = document.createElement('div');
-						wrapper.setAttribute('class', 'container');
+						wrapper.setAttribute('class', 'container decrypt-wrapper');
 						wrapper.setAttribute('id', 'wrapper-' + extraId);
 						wrapper.setAttribute('style', 'display: none');
 						wrapper.innerHTML = frameDecrypt;
@@ -414,6 +414,7 @@ function getRecipients(){
  */
 function clickHandler() {
 	console.log('clicked');
+	// return;
 
 	// check login status
 	chrome.runtime.sendMessage({
@@ -610,7 +611,7 @@ if (MAIL_SERVICE === GMAIL){
 				}
 				if (check != 1){
 					// element.appendChild(e);
-					e.setAttribute('class', 'wG J-Z-I btn btn-primary');
+					e.setAttribute('class', 'wG J-Z-I btn-encrypt-email btn-crypto');
 					div.appendChild(e);
 					var atms = document.getElementsByClassName('wG J-Z-I')[0];
 					atms = $(atms).clone();
@@ -947,6 +948,7 @@ function decryptEmail(data, extraId, position) {
 	// data must be in this format:
 	// U2FsdGVkX1/YoCfyJ...IatQmW5q4jfSewveW37HbgA6pGgPuap9mKM=|user@gmail.com
 	data = data.split('|');
+	console.log(data);
 
 	if (data.length < 2){
 		alert('Data is corrupted.');
@@ -960,7 +962,7 @@ function decryptEmail(data, extraId, position) {
 		return;
 	}
 
-	// Chrome has already storaged key pair of this email before.
+	// Chrome has already saved key pair of this email before.
 	try {
 
 		// use main key
@@ -976,7 +978,7 @@ function decryptEmail(data, extraId, position) {
 		if (decryptResult.status.localeCompare('success') != 0){
 			// if fail, use temp key.
 			if (!('encryptedTmpPrivateKey' in user)){
-				alert("Cannot decrypt message with your Private Key");
+				alert("Could not decrypt message with your Private Key");
 				return;
 			}
 			privateKey = user.encryptedTmpPrivateKey;
@@ -987,6 +989,7 @@ function decryptEmail(data, extraId, position) {
 			decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
 			if (decryptResult.status.localeCompare('success') != 0){
 				alert("Cannot decrypt message with your Private Key");
+				removeAnimation(500, extraId);
 				return;
 			}
 			console.log('using tmp key');

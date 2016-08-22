@@ -5,7 +5,7 @@
     border: 1px solid #3079ed;
     background: #4d90fe;
     color: white;
-    padding: 2px 5px;
+    padding: 5px 10px;
 }
 
 
@@ -32,4 +32,99 @@
 
 .contentBtnDecrypt:hover{
 	background: rgb(101, 202, 232) none repeat scroll 0% 0% / auto padding-box border-box;
+}
+
+div.decrypt-wrapper {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 485px 79.7727px;
+    transform-origin: 485px 79.7727px;
+    border: 1px solid rgb(85, 170, 170);
+    border-radius: 10px 10px 10px 10px;
+    margin: 10px 52px 0px;
+    outline: rgb(51, 51, 51) none 0px;
+    padding: 0px 15px;
+}/*#DIV_1*/
+
+div.form-group {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    height: 46.3636px;
+    width: 938.182px;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 469.091px 23.1818px;
+    transform-origin: 469.091px 23.1818px;
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal normal normal 14px / 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 0px 0px 10px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*#DIV_2*/
+
+label {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 19.0909px;
+    max-width: 100%;
+    width: 225.455px;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 112.727px 9.54545px;
+    transform-origin: 112.727px 9.54545px;
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal bold normal 14px / 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 0px 0px 5px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*#LABEL_3*/
+
+
+input.attach {
+    color: rgb(51, 51, 51);
+    display: block;
+    height: 21.8182px;
+    width: 278.182px;
+    column-rule-color: rgb(51, 51, 51);
+    align-items: baseline;
+    perspective-origin: 139.091px 10.9091px;
+    transform-origin: 139.091px 10.9091px;
+    background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal normal normal 14px / 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    outline: rgb(51, 51, 51) none 0px;
+    padding: 0px;
+}/*#INPUT_5*/
+
+
+button.btn-primary {
+    color: #fff;
+    cursor: pointer;
+    height: 28px;
+    width: 78px;
+    column-rule-color: rgba(0, 0, 0, 0);
+    perspective-origin: 38.6364px 13.6932px;
+    transform-origin: 38.6364px 13.6932px;
+    transform-style: preserve-3d;
+    border: 0px none rgba(0, 0, 0, 0);
+    border-radius: 2.5px 2.5px 2.5px 2.5px;
+    background: rgb(62, 135, 236)
+}
+
+
+button.btn-warning {
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    height: 28px;
+    width: 78px;
+    touch-action: manipulation;
+    vertical-align: middle;
+    column-rule-color: rgb(255, 255, 255);
+    perspective-origin: 33.4943px 16.9886px;
+    transform-origin: 33.4943px 16.9886px;
+    background: rgb(240, 173, 78) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 1px solid rgb(238, 162, 54);
+    border-radius: 4px 4px 4px 4px;
+    outline: rgb(255, 255, 255) none 0px;
+}
+div.container{
+    margin: auto 15%;
 }

@@ -48,6 +48,7 @@ $('#btnLogIn').on('click', function () {
 			// return;
 			if (data.message.localeCompare('OK') != 0){
 				console.log(data.message);
+				alert(data.message);
 				return;
 			}
 			// alert(JSON.stringify(data));
@@ -59,7 +60,7 @@ $('#btnLogIn').on('click', function () {
 				keyWorker.postMessage({
 					main: {
 						email: email,
-						seed: CryptoJS.MD5(email).toString(CryptoJS.enc.Base16),
+						seed: CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16),
 						passphrase: hashedPassword,
 						bitLen: 1024,
 					},
@@ -89,7 +90,7 @@ $('#btnLogIn').on('click', function () {
 				}
 			}
 			else {
-				var key = generateRSAKey(email, CryptoJS.MD5(email).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+				var key = generateRSAKey(email, CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
 
 				var info = {
 					isLoggedIn: 1,
@@ -200,7 +201,7 @@ $('#btnReg').on('click', function () {
 			console.log(JSON.stringify(data));
 		},
 		success: function(data) { 
-			alert("success");
+			alert("Register Successfully. Check your inbox to get Active ID");
 			console.log(data);
 			return false;
 		},
