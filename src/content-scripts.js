@@ -261,6 +261,47 @@ if (MAIL_SERVICE == GMAIL){
 	}, 1000);
 }
 else if (MAIL_SERVICE == HUST_MAIL){
+	
+	// Init CSS
+
+	var cssInterval = setInterval(function () {
+		
+		if (!top.frames['Main'].document.getElementById('e2ee-mark')){
+			try {
+				var cssLink = document.createElement('link');
+				cssLink.href = "chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/style.css";
+				cssLink.type = "text/css";
+				cssLink.rel = "stylesheet";
+				top.frames["Main"].document.body.appendChild(cssLink);
+
+				var cssLink1 = document.createElement('link');
+				cssLink1.href = "chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/content-css.css";
+				cssLink1.type = "text/css";
+				cssLink1.rel = "stylesheet";
+				top.frames["Main"].document.body.appendChild(cssLink1);
+
+				var jsScript = document.createElement('script');
+				jsScript.type = 'text/javascript';
+				jsScript.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js";
+				jsScript.setAttribute('id', 'e2ee-jsScript');
+				jsScript.setAttribute('class', 'e2ee-jsScript');
+				top.frames["Main"].document.body.appendChild(jsScript);
+
+				var mark = document.createElement('div');
+				mark.setAttribute('style', 'display: none');
+				mark.setAttribute('id', 'e2ee-mark');
+				top.frames["Main"].document.body.appendChild(mark);
+				document.body.appendChild(jsScript);
+
+				console.log("CSS is injected");
+			}
+			catch (e){
+
+			}
+		}
+	}, 1000)
+
+	// Render Ecrypt button
 	setInterval(function () {
 		var div = top.frames["Main"].document.getElementsByClassName('Fixed');
 		// console.log(div);
@@ -302,7 +343,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						// btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', function () {
 							console.log('show clicked');
-							// jQuery('#wrapper-' + extraId).show('normal');
+							top.frames["Main"].document.getElementById('wrapper-' + extraId).style.display = 'block';
 						});
 						// console.log(cipher);
 						console.log('added');
@@ -316,21 +357,13 @@ else if (MAIL_SERVICE == HUST_MAIL){
 							</div>`;
 						// console.log(frameDecrypt);
 						var wrapper = document.createElement('div');
-						wrapper.setAttribute('class', 'e2ee-container decrypt-wrapper');
+						wrapper.setAttribute('class', 'e2ee-container decrypt-wrapper decrypt-wrapper-hust');
 						wrapper.setAttribute('id', 'wrapper-' + extraId);
-						// wrapper.setAttribute('style', 'display: none');
+						wrapper.setAttribute('style', 'display: none');
 						wrapper.innerHTML = frameDecrypt;
 						div.appendChild(wrapper);
 						// ob('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
 						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, i));
-						// top.frames["Main"].document.getElementById('btnHide-' + extraId).addEventListener('click', function () {
-						// 	// jQuery('#wrapper-' + extraId).hide('normal');
-						// });
-						// jQuery.loadScript('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/consts-and-funcs.js', function () {
-						// 	jQuery.loadScript('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/decrypt-email.js', function () {
-						// 		console.log('all done');
-						// 	})
-						// })
 						console.log('done added');
 					}
 				}
@@ -565,7 +598,7 @@ function getRecipients(){
 		}
 		return result;
 	}
-	else if (window.location.hostname === "mail.hust.vn"){
+	else if (["mail.hust.vn", "mail.hust.edu.vn"].indexOf(window.location.hostname) >= 0){
 		var to = ob('To').value.match(/([\w\.0-9_]*@[\w\.0-9]*)/g);
 		var cc = ob('CC').value.match(/([\w\.0-9_]*@[\w\.0-9]*)/g);
 		var result = [];
@@ -583,7 +616,7 @@ function getRecipients(){
  * Render button
  */
 function clickHandler() {
-	console.log('clicked');
+	console.log('clicked r nhe');
 	// return;
 
 	// check login status
@@ -927,6 +960,13 @@ function encryptEmail () {
 			}
 			else if (MAIL_SERVICE === HUST_MAIL){
 				document.getElementsByTagName("iframe")[0].contentWindow.document.body.innerHTML = encryptedEmailContent;
+				try {
+					ob('SendNowBottom').click()
+				}
+				catch (e){
+					console.log(e);
+					alert('Something went wrong. You might need to click "Send" button yourself to send this message');
+				}
 			}
 			clearInterval(interval);
 			log('done');

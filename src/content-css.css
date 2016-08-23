@@ -47,6 +47,10 @@ div.decrypt-wrapper {
     padding: 0px 15px;
 }/*#DIV_1*/
 
+div.decrypt-wrapper-hust{
+    margin-left: 0px !important;
+}
+
 div.form-group {
     box-sizing: border-box;
     color: rgb(51, 51, 51);

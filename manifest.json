@@ -65,6 +65,8 @@
 	"web_accessible_resources": [
 		"/src/consts-and-funcs.js",
 		"/src/decrypt-email.js",
-		"/src/file-worker.js"
+		"/src/file-worker.js",
+		"/src/style.css",
+		"/src/content-css.css"
 	]
 }
