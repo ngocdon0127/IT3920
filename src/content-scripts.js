@@ -243,6 +243,8 @@ chrome.runtime.sendMessage({
 	}
 );
 
+// ========== Render Decrypt Button ==========	
+
 if (MAIL_SERVICE == GMAIL){
 	/**
 	 * Detect when inbox is about to loaded.
@@ -285,6 +287,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						}
 					}
 					if (canAdd){
+						var extraId = Math.floor(Math.random() * 1000000);
 						var pre = div.children[0];
 						// console.log(pre);
 						var btn = document.createElement('input');
@@ -292,35 +295,43 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('class', 'contentBtnDecrypt');
 						var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
-						btn.setAttribute('cipher', cipher);
-						btn.addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher));
-						// console.log(cipher);
 						div.appendChild(btn);
+
+						btn.setAttribute('btnClass', 'btnDecrypt');
+						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
+						// btn.setAttribute('cipher', cipher);
+						btn.addEventListener('click', function () {
+							console.log('show clicked');
+							// jQuery('#wrapper-' + extraId).show('normal');
+						});
+						// console.log(cipher);
 						console.log('added');
-						// var frameDecrypt = `<div class="container">
-						// 	<div class="form-group">
-						// 		<textarea type="text" id="text" class="form-control" placeholder="Text"></textarea>
-						// 	</div>
-						// 	<div class="form-group">
-						// 		<label for="attach">Choose *.encrypted file to decrypt</label>
-						// 		<input type="file" name="attach" id="attach">
-						// 	</div>
-						// 	<div class="form-group hidden">
-						// 		<label for="slRecipients">Decrypt email with account: </label>
-						// 		<select name="slRecipients" id="slRecipients"></select>
-						// 	</div>
-						// 	<div class="form-group">
-						// 		<button data-label="Decrypt" id="btnDecrypt" class="btn-crypto">Decrypt</button>
-						// 	</div>
-						// 	<div class="form-group">
-						// 		<div contenteditable="true" id="decrypted" style="display: none"></div>
-						// 	</div>
-						// 	<script src="decrypt-email.js"></script>
-						// </div>`;
+						var frameDecrypt = `
+							<div class="form-group">
+								<label for="attach-` + extraId + `" class="e2eelabel">Choose *.encrypted file to decrypt</label><br />
+								<input type="file" class="attach" name="attach" id="attach-` + extraId + `">
+							</div>
+							<div class="form-group">
+								<button position="` + i + `" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
+							</div>`;
 						// console.log(frameDecrypt);
-						// frameDecrypt = document.createElement(frameDecrypt);
-						// div.appendChild(frameDecrypt);
-						// console.log('done added');
+						var wrapper = document.createElement('div');
+						wrapper.setAttribute('class', 'e2ee-container decrypt-wrapper');
+						wrapper.setAttribute('id', 'wrapper-' + extraId);
+						// wrapper.setAttribute('style', 'display: none');
+						wrapper.innerHTML = frameDecrypt;
+						div.appendChild(wrapper);
+						// ob('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
+						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, i));
+						// top.frames["Main"].document.getElementById('btnHide-' + extraId).addEventListener('click', function () {
+						// 	// jQuery('#wrapper-' + extraId).hide('normal');
+						// });
+						// jQuery.loadScript('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/consts-and-funcs.js', function () {
+						// 	jQuery.loadScript('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/decrypt-email.js', function () {
+						// 		console.log('all done');
+						// 	})
+						// })
+						console.log('done added');
 					}
 				}
 			}
@@ -1013,13 +1024,20 @@ var dw = undefined;
 /** 
  * Decrypt attachments.
  */
-function decryptFile (extraId) {
-	if (ob('attach-' + extraId).files.length < 1){
+function decryptFile (inputFiles, extraId) {
+	// var inputFiles = '';
+	// if (MAIL_SERVICE == GMAIL){
+	// 	inputFiles = ob('attach-' + extraId);
+	// }
+	// else if (MAIL_SERVICE == HUST_MAIL){
+	// 	inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
+	// }
+	if (inputFiles.files.length < 1){
 		return;
 	}
 
 	// check file name.
-	if (ob('attach-' + extraId).files[0].name.indexOf('.encrypted') < 0){
+	if (inputFiles.files[0].name.indexOf('.encrypted') < 0){
 		alert('Choose *.encrypted file to decrypt.');
 		return;
 	}
@@ -1049,7 +1067,7 @@ function decryptFile (extraId) {
 			dw = new Worker(window.URL.createObjectURL(blob));
 			dw.postMessage({
 				type: 'decrypt',
-				file: ob('attach-' + extraId).files[0],
+				file: inputFiles.files[0],
 				key: aesKeyFile
 			});
 		}
@@ -1063,10 +1081,11 @@ function decryptFile (extraId) {
 				try{
 					blob = dataURLToBlob(data);
 					saveAs(blob, filename);
-					removeAnimation(0, extraId);
 				}
 				catch (e){
 					alert('Invalid key.');
+				}
+				finally {
 					removeAnimation(0, extraId);
 				}
 			}
@@ -1171,7 +1190,14 @@ function decryptEmail(data, extraId, position) {
 			return plainText[0];
 		});
 		$('#decrypted').fadeIn();
-		if (ob('attach-' + extraId).files.length < 1){
+		var inputFiles = '';
+		if (MAIL_SERVICE == GMAIL){
+			inputFiles = ob('attach-' + extraId);
+		}
+		else if (MAIL_SERVICE == HUST_MAIL){
+			inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
+		}
+		if (inputFiles.files.length < 1){
 
 			// without decrypting files, extension can decrypt email very fast.
 			// => let the button animate in a short time before reverting it to the original state.
@@ -1182,13 +1208,28 @@ function decryptEmail(data, extraId, position) {
 		else{
 			aesKeyFile = plainText[1];
 			console.log(aesKeyFile);
-			decryptFile(extraId);
+			decryptFile(inputFiles, extraId);
 		}
 
 		// replace encrypted email with the decrypted email
-		$(findPre(document.getElementsByClassName('adP adO')[position])).parent().html(function () {
-			return plainText[0];
-		});
+		if (MAIL_SERVICE == GMAIL){
+			$(findPre(document.getElementsByClassName('adP adO')[position])).parent().html(function () {
+				return plainText[0];
+			});
+		}
+		else if (MAIL_SERVICE == HUST_MAIL){
+			var div = top.frames["Main"].document.getElementsByClassName('Fixed')[0].children[0];
+			// console.log(div);
+			div.innerHTML = plainText[0];
+			// console.log(plainText[0]);
+			// console.log(plainText[0]);
+			// console.log(plainText[0]);
+			// var content = document.createElement('div');
+			// content.innerHTML = plainText[0];
+			// div.appendChild(content);
+			// // return;
+		}
+		
 	}
 	catch (e){
 		console.log(e);
@@ -1205,12 +1246,19 @@ function decryptEmail(data, extraId, position) {
 // remove animation of button decrypt
 
 function removeAnimation (time, extraId) {
+	return false;
 	var time = parseInt(time);
 	(time < 0) ? (time = 0) : 0;
 	setTimeout(function () {
 		try {
-			ob('btnDecrypt-' + extraId).classList.remove('loading');
-			ob('btnDecrypt-' + extraId).removeAttribute('disabled');
+			if (MAIL_SERVICE == GMAIL){
+				ob('btnDecrypt-' + extraId).classList.remove('loading');
+				ob('btnDecrypt-' + extraId).removeAttribute('disabled');
+			}
+			else if (MAIL_SERVICE == HUST_MAIL){
+				top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).classList.remove('loading');
+				top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).removeAttribute('disabled');
+			}
 		}
 		catch (err){
 			console.log(err);
