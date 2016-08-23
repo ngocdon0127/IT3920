@@ -411,7 +411,7 @@ function emailRowClickHandler () {
 						btn.setAttribute('type', 'button');
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('btnClass', 'btnDecrypt');
-						btn.setAttribute('class', 'contentBtnDecrypt btn btn-primary');
+						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
 						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
 						// btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', function () {
@@ -429,11 +429,11 @@ function emailRowClickHandler () {
 								<button position="` + i + `" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
 							</div>
 							<div class="form-group">
-								<button  id="btnHide-` + extraId + `" class="btn-waring btn-hide">Hide</button>
+								<button  id="btnHide-` + extraId + `" class="e2ee-btn-waring btn-hide">Hide</button>
 							</div>`;
 						// console.log(frameDecrypt);
 						var wrapper = document.createElement('div');
-						wrapper.setAttribute('class', 'container decrypt-wrapper');
+						wrapper.setAttribute('class', 'e2ee-container decrypt-wrapper');
 						wrapper.setAttribute('id', 'wrapper-' + extraId);
 						wrapper.setAttribute('style', 'display: none');
 						wrapper.innerHTML = frameDecrypt;

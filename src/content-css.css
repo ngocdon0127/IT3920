@@ -95,7 +95,7 @@ input.attach {
 }/*#INPUT_5*/
 
 
-button.btn-primary {
+button.e2ee-btn-primary {
     color: #fff;
     cursor: pointer;
     height: 28px;
@@ -110,7 +110,7 @@ button.btn-primary {
 }
 
 
-button.btn-warning {
+button.e2ee-btn-warning {
     color: rgb(255, 255, 255);
     cursor: pointer;
     height: 28px;
@@ -125,6 +125,6 @@ button.btn-warning {
     border-radius: 4px 4px 4px 4px;
     outline: rgb(255, 255, 255) none 0px;
 }
-div.container{
+div.e2ee-container{
     margin: auto 15%;
 }
