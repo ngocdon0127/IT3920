@@ -699,9 +699,9 @@ function clickHandler() {
 			if (response.name !== 'requested-public-keys'){
 				return;
 			}
-			console.log(response);
+			console.log('response', response);
 			// save to global variable.
-			publicKeys = response.data;
+			publicKeys = JSON.parse(JSON.stringify(response.data));
 		}
 	)
 
@@ -926,13 +926,22 @@ function encryptEmail () {
 	// Encrypt email for recipients.
 	for (var i = 0; i < recipients.length; i++) {
 		var recipient = recipients[i];
-		log('start encrypting email for ' + recipient);
+		console.log('start encrypting email for ' + recipient);
 		try {
 			var data = preDecrypt(publicKeys[recipient]);
+			// console.log(recipient + ' : "' + data + '"');
+			data = data.split('|');
+			if (!(data instanceof Array) || (data.length < 2) || (data[1] !== recipient)){
+				// console.log(typeof(data));
+				// console.log(data instanceof Array)
+				// console.log(data);
+				throw new Error('By accident, Raw initial key is follow extension encryption rules.');
+			}
 		}
 		catch (e){
 			console.log('=== encrypt with initial key will throw an error ===');
 			console.log(e);
+			// console.log(publicKeys[recipient]);
 			console.log('=== but it doesn\'t matter ===');
 			publicKeys[recipient] = preEncrypt(publicKeys[recipient] + '|' + recipient);
 		}
@@ -971,7 +980,7 @@ function encryptEmail () {
 			clearInterval(interval);
 			log('done');
 		}
-	}, 1);
+	}, 100);
 }
 
 /**
@@ -982,10 +991,11 @@ function encryptEmail () {
  * @param {object} obj Flags
  */
 function ee (recipient, plainText, obj) {
-
+	console.log(publicKeys[recipient]);
 	var data = preDecrypt(publicKeys[recipient]);
 	data = data.split('|');
-	console.log(data[1]);
+	console.log(data);
+	// console.log(data[1]);
 	console.log(recipient);
 	if (data[1] != recipient){
 		alert('Email is not matched.');
@@ -1166,7 +1176,7 @@ function decryptEmail(data, extraId, position) {
 	// data must be in this format:
 	// U2FsdGVkX1/YoCfyJ...IatQmW5q4jfSewveW37HbgA6pGgPuap9mKM=|user@gmail.com
 	data = data.split('|');
-	console.log(data);
+	// console.log(data);
 
 	if (data.length < 2){
 		alert('Data is corrupted.');
@@ -1184,91 +1194,107 @@ function decryptEmail(data, extraId, position) {
 	try {
 
 		// use main key
-		var privateKey = user.encryptedPrivateKey;
 		// console.log(privateKey);
 		var passphrase = prompt('Enter passphrase of ' + data[1] + ':', '');
 		passphrase = CryptoJS.MD5(passphrase).toString(CryptoJS.enc.Base16);
-		privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
-		privateKey = preDecrypt(privateKey);
-		// console.log('done privateKey');
-		var decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
-		console.log(decryptResult);
-		if (decryptResult.status.localeCompare('success') != 0){
-			// if fail, use temp key.
-			if (!('encryptedTmpPrivateKey' in user)){
-				alert("Could not decrypt message with your Private Key");
-				return;
+		chrome.runtime.sendMessage({
+			actionType: 'verify',
+			email: user.email,
+			hashedPassword: passphrase
+		}, function (response) {
+			// console.log(response);
+			// console.log(user);
+			if (response.status !== 'success'){
+				return alert('Could not regenerate your RSA Key. Try again later.');
 			}
-			privateKey = user.encryptedTmpPrivateKey;
-			// console.log(privateKey);
-			privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
-			privateKey = preDecrypt(privateKey);
-			// console.log('done privateKey');
-			decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
-			if (decryptResult.status.localeCompare('success') != 0){
-				alert("Cannot decrypt message with your Private Key");
-				removeAnimation(500, extraId);
-				return;
+			// save key to user.
+			user = response;
+
+
+			// Start decrypting
+			try {
+				var privateKey = user.encryptedPrivateKey;
+				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
+				privateKey = preDecrypt(privateKey);
+				// console.log('done privateKey');
+				var decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
+				console.log(decryptResult);
+				if (decryptResult.status.localeCompare('success') != 0){
+					// if fail, use temp key.
+					if (!('encryptedTmpPrivateKey' in user)){
+						alert("Could not decrypt message with your Private Key");
+						return;
+					}
+					privateKey = user.encryptedTmpPrivateKey;
+					// console.log(privateKey);
+					privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
+					privateKey = preDecrypt(privateKey);
+					// console.log('done privateKey');
+					decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
+					if (decryptResult.status.localeCompare('success') != 0){
+						alert("Cannot decrypt message with your Private Key");
+						removeAnimation(500, extraId);
+						return;
+					}
+					console.log('using tmp key');
+				}
+				else {
+					console.log('using main key');
+				}
+				var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
+				console.log(plainText);
+
+				// plainText should consist of 1 or 2 parts.
+				// The first part is the original email Alice sends to Bob.
+				// The second part (if exist) is the AES secret key used to encrypt attachments.
+				// These two parts is seperated by '|'
+
+				// Ex:
+				// This is an encrypted email without any attachments.
+				// This is an encrypted email with attachments|somekey.
+				$('#decrypted').html(function () {
+					return plainText[0];
+				});
+				$('#decrypted').fadeIn();
+				var inputFiles = '';
+				if (MAIL_SERVICE == GMAIL){
+					inputFiles = ob('attach-' + extraId);
+				}
+				else if (MAIL_SERVICE == HUST_MAIL){
+					inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
+				}
+				if (inputFiles.files.length < 1){
+
+					// without decrypting files, extension can decrypt email very fast.
+					// => let the button animate in a short time before reverting it to the original state.
+					
+					removeAnimation(500, extraId);
+					// console.log('remove loading UI effect');
+				}
+				else{
+					aesKeyFile = plainText[1];
+					console.log(aesKeyFile);
+					decryptFile(inputFiles, extraId);
+				}
+
+				// replace encrypted email with the decrypted email
+				if (MAIL_SERVICE == GMAIL){
+					$(findPre(document.getElementsByClassName('adP adO')[position])).parent().html(function () {
+						return plainText[0];
+					});
+				}
+				else if (MAIL_SERVICE == HUST_MAIL){
+					var div = top.frames["Main"].document.getElementsByClassName('Fixed')[0].children[0];
+					// console.log(div);
+					div.innerHTML = plainText[0];
+				}
 			}
-			console.log('using tmp key');
-		}
-		else {
-			console.log('using main key');
-		}
-		var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
-		console.log(plainText);
-
-		// plainText should consist of 1 or 2 parts.
-		// The first part is the original email Alice sends to Bob.
-		// The second part (if exist) is the AES secret key used to encrypt attachments.
-		// These two parts is seperated by '|'
-
-		// Ex:
-		// This is an encrypted email without any attachments.
-		// This is an encrypted email with attachments|somekey.
-		$('#decrypted').html(function () {
-			return plainText[0];
-		});
-		$('#decrypted').fadeIn();
-		var inputFiles = '';
-		if (MAIL_SERVICE == GMAIL){
-			inputFiles = ob('attach-' + extraId);
-		}
-		else if (MAIL_SERVICE == HUST_MAIL){
-			inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
-		}
-		if (inputFiles.files.length < 1){
-
-			// without decrypting files, extension can decrypt email very fast.
-			// => let the button animate in a short time before reverting it to the original state.
-			
-			removeAnimation(500, extraId);
-			// console.log('remove loading UI effect');
-		}
-		else{
-			aesKeyFile = plainText[1];
-			console.log(aesKeyFile);
-			decryptFile(inputFiles, extraId);
-		}
-
-		// replace encrypted email with the decrypted email
-		if (MAIL_SERVICE == GMAIL){
-			$(findPre(document.getElementsByClassName('adP adO')[position])).parent().html(function () {
-				return plainText[0];
-			});
-		}
-		else if (MAIL_SERVICE == HUST_MAIL){
-			var div = top.frames["Main"].document.getElementsByClassName('Fixed')[0].children[0];
-			// console.log(div);
-			div.innerHTML = plainText[0];
-			// console.log(plainText[0]);
-			// console.log(plainText[0]);
-			// console.log(plainText[0]);
-			// var content = document.createElement('div');
-			// content.innerHTML = plainText[0];
-			// div.appendChild(content);
-			// // return;
-		}
+			catch (e){
+				console.log(e);
+				alert('Email is corrupted or invalid passphrase.');
+				removeAnimation(0, extraId);
+			}
+		})
 		
 	}
 	catch (e){

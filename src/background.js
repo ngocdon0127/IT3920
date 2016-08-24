@@ -193,7 +193,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				console.log(data);
 				sendResponse({
 					name: 'requested-public-keys',
-					data: data
+					data: data,
 				});
 				return false;
 			},
@@ -264,6 +264,95 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		console.log('catch decrypt-email in under');
 		console.log(request.cipher);
 		clickHandler(request.cipher);
+	}
+	else if (request.actionType === 'verify'){
+		console.log('verify request');
+		var email = request.email;
+		var hashedPassword = request.hashedPassword;
+		$.ajax({ 
+			url: SERVER + SERVER_PORT + '/E2EE/user/verify', 
+			type: 'POST', 
+			dataType: 'json', 
+			data: JSON.stringify({email: email, password: hashedPassword}),
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader("Accept", "application/json");
+				xhr.setRequestHeader("Content-Type", "application/json");
+				// console.log(data);
+				// console.log(JSON.stringify(data));
+			},
+			success: function(data) { 
+				// alert("success");
+				// console.log(data);
+				// return;
+				if (data.message.localeCompare('OK') != 0){
+					console.log(data.message);
+					sendResponse({
+						status: 'error',
+						error: data.message
+					})
+					return;
+				}
+				// alert(JSON.stringify(data));
+
+				// Generate key in background
+
+				if (typeof(Worker) !== 'undefined'){
+					var keyWorker = new Worker('/src/key-worker.js');
+					keyWorker.postMessage({
+						main: {
+							email: email,
+							seed: CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16),
+							passphrase: hashedPassword,
+							bitLen: 1024,
+						},
+						tmp: data.initialKey ? {
+							email: email,
+							seed: data.initialKey,
+							passphrase: hashedPassword,
+							bitLen: 1024
+						} : 0
+
+					})
+
+					keyWorker.onmessage = function (event) {
+						// console.log(event.data);
+						// alert('Received Key from worker');
+						event.data.status = 'success';
+						sendResponse(event.data);
+					}
+				}
+				else {
+					var key = generateRSAKey(email, CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+
+					var info = {
+						isLoggedIn: 1,
+						email: email,
+						publicKey: key.public,
+						encryptedPrivateKey: key.private
+					}
+
+					if (data.initialKey){
+
+						// server generates RSA key with 1024 bitlen.
+						// regenerate it here.
+						var initRSAKey = generateRSAKey(email, data.initialKey, hashedPassword, 1024);
+						info.tmpPublicKey = initRSAKey.public;
+						info.encryptedTmpPrivateKey = initRSAKey.private;
+					}
+
+					console.log(info);
+					info.status = 'success';
+					sendResponse(info);
+					// alert("OK generate key directly")
+
+				}
+			},
+			error:function(data,status,er) { 
+				sendResponse({status: 'error', error: 'Cannot verify your account'});
+				console.log(data);
+				// user = {};
+			}
+		});
 	}
 	return true;  // call sendResponse async - very important
 })

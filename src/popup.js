@@ -56,6 +56,7 @@ $('#btnLogIn').on('click', function () {
 			// Generate key in background
 
 			if (typeof(Worker) !== 'undefined'){
+				// Generate but do not save :v
 				var keyWorker = new Worker('key-worker.js');
 				keyWorker.postMessage({
 					main: {
@@ -68,15 +69,14 @@ $('#btnLogIn').on('click', function () {
 						email: email,
 						seed: data.initialKey,
 						passphrase: hashedPassword,
-						bitLen: 2048
+						bitLen: 1024
 					} : 0
 
 				})
 
 				keyWorker.onmessage = function (event) {
-					// console.log(event.data);
-					// alert('Received Key from worker');
-					STORAGE_AREA.set({info: event.data}, function () {
+					var dataToSave = {info: {email: email, isLoggedIn: 1}};
+					STORAGE_AREA.set(dataToSave, function () {
 						if (typeof(chrome.runtime.lastError) !== 'undefined'){
 							// alert("Could not save login info to chrome.");
 							return;
@@ -101,9 +101,9 @@ $('#btnLogIn').on('click', function () {
 
 				if (data.initialKey){
 
-					// server generates RSA key with 2048 bitlen.
+					// server generates RSA key with 1024 bitlen.
 					// regenerate it here.
-					var initRSAKey = generateRSAKey(email, data.initialKey, hashedPassword, 2048);
+					var initRSAKey = generateRSAKey(email, data.initialKey, hashedPassword, 1024);
 					info.tmpPublicKey = initRSAKey.public;
 					info.encryptedTmpPrivateKey = initRSAKey.private;
 				}
@@ -111,7 +111,7 @@ $('#btnLogIn').on('click', function () {
 				console.log(info);
 				// alert("OK generate key directly")
 
-				STORAGE_AREA.set({info: info}, function () {
+				STORAGE_AREA.set({info: {email: email, isLoggedIn: 1}}, function () {
 					if (typeof(chrome.runtime.lastError) !== 'undefined'){
 						// alert("Could not save login info to chrome.");
 						return;
