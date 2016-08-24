@@ -115,7 +115,9 @@ chrome.extension.onConnect.addListener(function (port){
 				else{
 					port.postMessage({
 						name: 'login-status',
-						isLoggedIn: 0
+						isLoggedIn: 0,
+						status: items.info ? items.info.status : '',
+						email: items.info ? items.info.email : ''
 					})
 				}
 			})

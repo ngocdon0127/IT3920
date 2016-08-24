@@ -210,18 +210,6 @@ function getMailService () {
 	return -1;
 }
 
-/**
- * jQuery load script
- */
-jQuery.loadScript = function (url, callback) {
-	jQuery.ajax({
-		url: url,
-		dataType: 'script',
-		success: callback,
-		async: true
-	});
-}
-
 // button to render extension frame
 var e = document.createElement('button');
 e.innerHTML = 'Encrypt';
@@ -960,6 +948,8 @@ function encryptEmail () {
 			if (MAIL_SERVICE === GMAIL){
 				document.getElementsByClassName('Am Al editable LW-avf')[0].innerHTML = encryptedEmailContent;
 				try {
+					ob('eframe-cryptojs').classList.remove('loading');
+					ob('eframe-cryptojs').removeAttribute('disabled');
 					document.getElementsByClassName('n1tfz')[0].children[0].children[0].children[1].click();
 				}
 				catch (e){
@@ -1204,8 +1194,10 @@ function decryptEmail(data, extraId, position) {
 		}, function (response) {
 			// console.log(response);
 			// console.log(user);
+			console.log(response);
 			if (response.status !== 'success'){
-				return alert('Could not regenerate your RSA Key. Try again later.');
+				alert(response.error);
+				return removeAnimation(500, extraId);
 			}
 			// save key to user.
 			user = response;
@@ -1279,13 +1271,16 @@ function decryptEmail(data, extraId, position) {
 
 				// replace encrypted email with the decrypted email
 				if (MAIL_SERVICE == GMAIL){
+					// ob('eframe-cryptojs').removeAttribute('disabled');
 					$(findPre(document.getElementsByClassName('adP adO')[position])).parent().html(function () {
 						return plainText[0];
 					});
 				}
 				else if (MAIL_SERVICE == HUST_MAIL){
+
 					var div = top.frames["Main"].document.getElementsByClassName('Fixed')[0].children[0];
 					// console.log(div);
+					// top.frames["Main"].document.getElementById('eframe-cryptojs').removeAttribute('disabled');
 					div.innerHTML = plainText[0];
 				}
 			}
@@ -1312,7 +1307,6 @@ function decryptEmail(data, extraId, position) {
 // remove animation of button decrypt
 
 function removeAnimation (time, extraId) {
-	return false;
 	var time = parseInt(time);
 	(time < 0) ? (time = 0) : 0;
 	setTimeout(function () {

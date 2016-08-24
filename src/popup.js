@@ -15,7 +15,15 @@ port.onMessage.addListener(function (msg) {
 			replaceLoginForm(msg.email);
 		}
 		else{
-			// alert('no no');
+			if (!msg.email){
+				ob('a-register').click();
+			}
+			if (msg.status.localeCompare('registered') === 0){
+				ob('a-active').click();
+			}
+			else if (msg.status.localeCompare('actived') === 0){
+				ob('a-login').click();
+			}
 		}
 	}
 });
@@ -49,6 +57,8 @@ $('#btnLogIn').on('click', function () {
 			if (data.message.localeCompare('OK') != 0){
 				console.log(data.message);
 				alert(data.message);
+				ob('btnLogIn').classList.remove('loading');
+				ob('btnLogIn').removeAttribute('disabled');
 				return;
 			}
 			// alert(JSON.stringify(data));
@@ -148,6 +158,7 @@ function replaceLoginForm (email) {
 	ob('home').appendChild(btn);
 }
 
+ob('btnReg').addEventListener('click', BUTTON_LOADING);
 $('#btnReg').on('click', function () {
 
 	// Email is used to seed random in cryptico library by this statement:
@@ -155,6 +166,8 @@ $('#btnReg').on('click', function () {
 	var email = ob('reg-email').value.trim();
 	if (email.length < 1){
 		alert('Email must not be null.');
+		ob('btnReg').classList.remove('loading');
+		ob('btnReg').removeAttribute('disabled');
 		return;
 	}
 
@@ -162,29 +175,31 @@ $('#btnReg').on('click', function () {
 	var emailRegex = /.+@.+\..+/;
 	if (emailRegex.test(email) == false){
 		alert('Invalid email.');
+		ob('btnReg').classList.remove('loading');
+		ob('btnReg').removeAttribute('disabled');
 		return;
 	}
 
 	var password = ob('reg-password').value;
 	if (password.length < 1){
 		alert('Passphrase must not be null.');
+		ob('btnReg').classList.remove('loading');
+		ob('btnReg').removeAttribute('disabled');
 		return;
 	}
 
 	if (password !== ob('reg-password-repeat').value){
 		alert('Password not match.');
+		ob('btnReg').classList.remove('loading');
+		ob('btnReg').removeAttribute('disabled');
 		return;
 	}
 
 	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 
-	// var key = generateRSAKey(email, hashedPassword, 1024);
-
 	var data = {
 		"email": email,
 		"password": hashedPassword,
-		// "publicKey": key.public, 
-		// "encryptedPrivateKey": key.private
 	}
 
 	console.log(data);
@@ -200,9 +215,20 @@ $('#btnReg').on('click', function () {
 			console.log(data);
 			console.log(JSON.stringify(data));
 		},
-		success: function(data) { 
-			alert("Register Successfully. Check your inbox to get Active ID");
+		success: function(data) {
+			if (data.message.localeCompare('Congratulation, your registration is success') === 0){
+				alert("Register Successfully. Check your inbox to get Active ID");
+				STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'registered'}}, function () {
+					ob('a-active').click();
+				})
+			}
+			else {
+				alert(data.message);
+			}
+			// alert("Register Successfully. Check your inbox to get Active ID");
 			console.log(data);
+			ob('btnReg').classList.remove('loading');
+			ob('btnReg').removeAttribute('disabled');
 			return false;
 		},
 		error:function(data,status,er) { 
@@ -211,6 +237,7 @@ $('#btnReg').on('click', function () {
 	});
 });
 
+ob('btnActive').addEventListener('click', BUTTON_LOADING);
 $('#btnActive').on('click', function () {
 	var email = $('#active-email').val();
 	var password = $('#active-password').val();
@@ -234,15 +261,25 @@ $('#btnActive').on('click', function () {
 			xhr.setRequestHeader("Content-Type", "application/json");
 		},
 		success: function(data) {
-			alert(JSON.stringify(data));
+			alert(data.message);
 			console.log(data);
 			console.log("success"); // Act here
+			if (data.message.localeCompare('Congratulation, your account is activated') === 0) {
+				STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'activated'}}, function () {
+					// don't care
+				})
+				ob('a-login').click();
+			}
+			ob('btnActive').classList.remove('loading');
+			ob('btnActive').removeAttribute('disabled');
 			return false;
 		},
 		error:function(data,status,er) { 
 			console.log(data);
 			alert(JSON.stringify(data));
 			console.log("error");
+			ob('btnActive').classList.remove('loading');
+			ob('btnActive').removeAttribute('disabled');
 		}
 	});
 })

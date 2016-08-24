@@ -57,13 +57,13 @@
 				<!-- Nav tabs -->
 				<ul class="nav nav-tabs" role="tablist">
 					<li role="presentation" class="active">
-						<a href="#login" aria-controls="home" role="tab" data-toggle="tab"><span style="color: black">Login</span></a>
+						<a href="#login" id="a-login" aria-controls="home" role="tab" data-toggle="tab"><span style="color: black">Login</span></a>
 					</li>
 					<li role="presentation">
-						<a href="#register" aria-controls="tab" role="tab" data-toggle="tab"><span style="color: black">Register</span></a>
+						<a href="#register" id="a-register" aria-controls="tab" role="tab" data-toggle="tab"><span style="color: black">Register</span></a>
 					</li>
 					<li role="presentation">
-						<a href="#active" aria-controls="tab" role="tab" data-toggle="tab"><span style="color: black">Active</span></a>
+						<a href="#active" id="a-active" aria-controls="tab" role="tab" data-toggle="tab"><span style="color: black">Active</span></a>
 					</li>
 				</ul>
 			
@@ -128,7 +128,7 @@
 							</fieldset>
 
 							<footer>
-								<button type="button" class="button" id="btnReg" value="Register">Register</button>
+								<button data-label="Register" class="btn-crypto" id="btnReg">Login</button>
 							</footer>
 						</div>
 					</div>
@@ -163,7 +163,7 @@
 							</fieldset>
 
 							<footer>
-								<button class="button" type="button" id="btnActive" value="Active">Active</button>
+								<button data-label="Active" class="btn-crypto" id="btnActive">Active</button>
 							</footer>
 						</div>
 					</div>

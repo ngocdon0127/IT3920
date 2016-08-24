@@ -263,12 +263,12 @@ function getEmailAddress () {
 	// Gmail
 	if (hostname === 'mail.google.com'){
 		var ea = document.getElementsByClassName('gb_ob')[0];
-		if (emailRegex.test(ea.innerHTML) !== false){
+		if (ea && (emailRegex.test(ea.innerHTML) !== false)){
 			return ea.innerHTML;
 		}
 
 		ea = document.getElementsByClassName('gb_pb')[0];
-		if (emailRegex.test(ea.innerHTML) !== false){
+		if (ea && (emailRegex.test(ea.innerHTML) !== false)){
 			return ea.innerHTML;
 		}
 		return false;
