@@ -431,6 +431,7 @@ function emailRowClickHandler () {
 					// }
 					for (var j = 0; j < btn.children.length; j++) {
 						var e = btn.children[j];
+						// console.log(e);
 						try{
 							if ((e.nodeName.toLowerCase() == 'input') && (e.getAttribute('btnClass').localeCompare('btnDecrypt') == 0)){
 								canAdd = false;
@@ -450,13 +451,16 @@ function emailRowClickHandler () {
 						var extraId = Math.floor(Math.random() * 1000000);
 						var btn = document.createElement('input');
 						btn.setAttribute('type', 'button');
-						btn.setAttribute('value', 'Decrypt this email');
+						btn.setAttribute('value', 'Decrypt this email ' + extraId);
 						btn.setAttribute('btnClass', 'btnDecrypt');
 						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
 						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
+						$(findPre(divs[i])).parent().attr('e2ee-bookmark', extraId);
 						// btn.setAttribute('cipher', cipher);
+						var wrapperId = '#wrapper-' + extraId;
 						btn.addEventListener('click', function () {
-							jQuery('#wrapper-' + extraId).show('normal');
+							console.log('#wrapper-' + extraId);
+							jQuery(wrapperId).show('normal');
 						});
 						// console.log(cipher);
 						divs[i].children[0].children[0].appendChild(document.createElement('br'));
@@ -483,7 +487,8 @@ function emailRowClickHandler () {
 						ob('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
 						ob('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, i));
 						ob('btnHide-' + extraId).addEventListener('click', function () {
-							jQuery('#wrapper-' + extraId).hide('normal');
+							console.log('#wrapper-' + extraId);
+							jQuery(wrapperId).hide('normal');
 						});
 						console.log('done added');
 					}
@@ -1000,6 +1005,9 @@ function ee (recipient, plainText, obj) {
 }
 
 function findPre (element) {
+	if (!element){
+		return false;
+	}
 	if (element.nodeName.toLowerCase().localeCompare('pre') == 0){
 		return element;
 	}
@@ -1277,9 +1285,19 @@ function decryptEmail(data, extraId, position) {
 				// replace encrypted email with the decrypted email
 				if (MAIL_SERVICE == GMAIL){
 					// ob('eframe-cryptojs').removeAttribute('disabled');
-					$(findPre(document.getElementsByClassName('adP adO')[position])).parent().html(function () {
-						return plainText[0];
-					});
+					console.log('replacing...');
+					console.log(document.getElementsByClassName('adP adO'));
+					var cipherBlock = findGmailBlock(extraId);
+					console.log(cipherBlock);
+					if (cipherBlock) {
+							$(cipherBlock).parent().html(function () {
+							return plainText[0];
+						});
+					}
+					else {
+						alert('Could not find Cipher Block');
+					}
+					
 				}
 				else if (MAIL_SERVICE == HUST_MAIL){
 
@@ -1330,4 +1348,20 @@ function removeAnimation (time, extraId) {
 			console.log(err);
 		}
 	}, time);
+}
+
+function findGmailBlock (bookmark) {
+	var arr = document.getElementsByClassName('adP adO');
+	for (var i = 0; i < arr.length; i++) {
+		// console.log(arr[i]);
+		try {
+			if ($(arr[i].children[0].children[0]).attr('e2ee-bookmark').localeCompare(bookmark) === 0){
+				return arr[i].children[0].children[0];
+			}
+		}
+		catch (e){
+			// don't care
+		}
+	}
+	return false;
 }
