@@ -323,7 +323,14 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						btn.setAttribute('type', 'button');
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('class', 'contentBtnDecrypt');
-						var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
+						var cipher = '';
+						try {
+							cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
+						}
+						catch (e){
+							console.log(e);
+						}
+						div.appendChild(document.createElement('br'));
 						div.appendChild(btn);
 
 						btn.setAttribute('btnClass', 'btnDecrypt');
@@ -444,12 +451,19 @@ function emailRowClickHandler () {
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('btnClass', 'btnDecrypt');
 						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
-						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
+						var cipher = '';
+						try {
+							cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
+						}
+						catch (e){
+							console.log(e);
+						}
 						// btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', function () {
 							jQuery('#wrapper-' + extraId).show('normal');
 						});
 						// console.log(cipher);
+						divs[i].children[0].children[0].appendChild(document.createElement('br'));
 						divs[i].children[0].children[0].appendChild(btn);
 						console.log('added');
 						var frameDecrypt = `
@@ -1185,11 +1199,12 @@ function decryptEmail(data, extraId, position) {
 
 		// use main key
 		// console.log(privateKey);
-		var passphrase = prompt('Enter passphrase of ' + data[1] + ':', '');
-		passphrase = CryptoJS.MD5(passphrase).toString(CryptoJS.enc.Base16);
+		var password = prompt('Enter passphrase of ' + data[1] + ':', '');
+		var passphrase = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 		chrome.runtime.sendMessage({
 			actionType: 'verify',
 			email: user.email,
+			password: password,
 			hashedPassword: passphrase
 		}, function (response) {
 			// console.log(response);
@@ -1205,6 +1220,7 @@ function decryptEmail(data, extraId, position) {
 
 			// Start decrypting
 			try {
+				console.log(user);
 				var privateKey = user.encryptedPrivateKey;
 				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
 				privateKey = preDecrypt(privateKey);
@@ -1223,6 +1239,7 @@ function decryptEmail(data, extraId, position) {
 					privateKey = preDecrypt(privateKey);
 					// console.log('done privateKey');
 					decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
+					console.log(decryptResult);
 					if (decryptResult.status.localeCompare('success') != 0){
 						alert("Cannot decrypt message with your Private Key");
 						removeAnimation(500, extraId);
@@ -1255,7 +1272,7 @@ function decryptEmail(data, extraId, position) {
 				else if (MAIL_SERVICE == HUST_MAIL){
 					inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
 				}
-				if (inputFiles.files.length < 1){
+				if (!inputFiles || inputFiles.files.length < 1){
 
 					// without decrypting files, extension can decrypt email very fast.
 					// => let the button animate in a short time before reverting it to the original state.
@@ -1307,6 +1324,7 @@ function decryptEmail(data, extraId, position) {
 // remove animation of button decrypt
 
 function removeAnimation (time, extraId) {
+	// return false;
 	var time = parseInt(time);
 	(time < 0) ? (time = 0) : 0;
 	setTimeout(function () {

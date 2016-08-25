@@ -270,6 +270,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	else if (request.actionType === 'verify'){
 		console.log('verify request');
 		var email = request.email;
+		var password = request.password;
 		var hashedPassword = request.hashedPassword;
 		$.ajax({ 
 			url: SERVER + SERVER_PORT + '/E2EE/user/verify', 
@@ -303,7 +304,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					keyWorker.postMessage({
 						main: {
 							email: email,
-							seed: CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16),
+							seed: CryptoJS.MD5(email + password).toString(CryptoJS.enc.Base16),
 							passphrase: hashedPassword,
 							bitLen: 1024,
 						},
@@ -324,7 +325,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					}
 				}
 				else {
-					var key = generateRSAKey(email, CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+					var key = generateRSAKey(email, CryptoJS.MD5(email + password).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
 
 					var info = {
 						isLoggedIn: 1,

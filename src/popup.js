@@ -71,7 +71,7 @@ $('#btnLogIn').on('click', function () {
 				keyWorker.postMessage({
 					main: {
 						email: email,
-						seed: CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16),
+						seed: CryptoJS.MD5(email + password).toString(CryptoJS.enc.Base16),
 						passphrase: hashedPassword,
 						bitLen: 1024,
 					},
@@ -100,7 +100,7 @@ $('#btnLogIn').on('click', function () {
 				}
 			}
 			else {
-				var key = generateRSAKey(email, CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+				var key = generateRSAKey(email, CryptoJS.MD5(email + password).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
 
 				var info = {
 					isLoggedIn: 1,
@@ -148,8 +148,13 @@ function replaceLoginForm (email) {
 	$(btn).addClass('btn btn-primary');
 	$(btn).text('Log out');
 	$(btn).on('click', function () {
-		STORAGE_AREA.clear(function () {
-			// alert('Signed Out.');
+		// STORAGE_AREA.clear(function () {
+		// 	// alert('Signed Out.');
+		// 	setTimeout(function () {
+		// 		window.close();
+		// 	}, 500)
+		// })
+		STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'actived'}}, function () {
 			setTimeout(function () {
 				window.close();
 			}, 500)
@@ -231,8 +236,9 @@ $('#btnReg').on('click', function () {
 			ob('btnReg').removeAttribute('disabled');
 			return false;
 		},
-		error:function(data,status,er) { 
-			alert("Email is already exist.");
+		error:function(data,status,er) {
+			console.log(data);
+			alert("Something went wrong. Try again later.");
 		}
 	});
 });
@@ -243,7 +249,7 @@ $('#btnActive').on('click', function () {
 	var password = $('#active-password').val();
 	var hashedPassword = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
 	var activeId = $('#active-id').val();
-	var key = generateRSAKey(email, CryptoJS.MD5(email + hashedPassword).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
+	var key = generateRSAKey(email, CryptoJS.MD5(email + password).toString(CryptoJS.enc.Base16), hashedPassword, 1024);
 	var data = {
 		email: email,
 		password: hashedPassword,
