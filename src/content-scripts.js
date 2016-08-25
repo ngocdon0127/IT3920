@@ -323,13 +323,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						btn.setAttribute('type', 'button');
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('class', 'contentBtnDecrypt');
-						var cipher = '';
-						try {
-							cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
-						}
-						catch (e){
-							console.log(e);
-						}
+						var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
 						div.appendChild(document.createElement('br'));
 						div.appendChild(btn);
 
@@ -459,13 +453,7 @@ function emailRowClickHandler () {
 						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('btnClass', 'btnDecrypt');
 						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
-						var cipher = '';
-						try {
-							cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
-						}
-						catch (e){
-							console.log(e);
-						}
+						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
 						// btn.setAttribute('cipher', cipher);
 						btn.addEventListener('click', function () {
 							jQuery('#wrapper-' + extraId).show('normal');
