@@ -348,7 +348,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 								<input type="file" class="attach" name="attach" id="attach-` + extraId + `">
 							</div>
 							<div class="form-group">
-								<button position="` + i + `" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
+								<button position="0" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
 							</div>`;
 						// console.log(frameDecrypt);
 						var wrapper = document.createElement('div');
@@ -357,8 +357,16 @@ else if (MAIL_SERVICE == HUST_MAIL){
 						wrapper.setAttribute('style', 'display: none');
 						wrapper.innerHTML = frameDecrypt;
 						div.appendChild(wrapper);
+
+						// this line: Cannot add BUTTON_LOADING effect to button decrypt.
+						// so that, cannot removeAnimation.
+						// somehow, it causes HUST Mail reload. 
+						// WASTE LOTS OF TIME TO FIGURE OUT WHY HUST MAIL RELOAD.
 						// ob('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
-						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, i));
+
+
+						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
+						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, 0));
 						console.log('done added');
 					}
 				}
@@ -489,11 +497,6 @@ function emailRowClickHandler () {
 						ob('btnHide-' + extraId).addEventListener('click', function () {
 							jQuery('#wrapper-' + extraId).hide('normal');
 						});
-						// jQuery.loadScript('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/consts-and-funcs.js', function () {
-						// 	jQuery.loadScript('chrome-extension://pfhpflblmdndjhbkegdhdapdlcnfihie/src/decrypt-email.js', function () {
-						// 		console.log('all done');
-						// 	})
-						// })
 						console.log('done added');
 					}
 					else{
@@ -510,13 +513,10 @@ var btnDecryptClickHandler = function (cipher, extraId, position) {
 	singleEmails = {};
 	
 	var d = cipher;
-	$('#text').text(deAlignEmail(d));
-	$('#text').val(deAlignEmail(d));
 
 	console.log('clicked decrypt button');
+	// debugger;
 
-	// insert data to select#slRecipients
-	// var contents = ob('text').value.split(STR_SEPERATOR);
 	var contents = deAlignEmail(d).split(STR_SEPERATOR);
 	contents.forEach(function (content) {
 		var c = '';
