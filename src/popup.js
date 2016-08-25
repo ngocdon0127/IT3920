@@ -20,9 +20,11 @@ port.onMessage.addListener(function (msg) {
 			}
 			if (msg.status.localeCompare('registered') === 0){
 				ob('a-active').click();
+				ob('active-email').value = msg.email;
 			}
-			else if (msg.status.localeCompare('actived') === 0){
+			else if (msg.status.localeCompare('activated') === 0){
 				ob('a-login').click();
+				ob('email').value = msg.email;
 			}
 		}
 	}
@@ -154,7 +156,7 @@ function replaceLoginForm (email) {
 		// 		window.close();
 		// 	}, 500)
 		// })
-		STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'actived'}}, function () {
+		STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'activated'}}, function () {
 			setTimeout(function () {
 				window.close();
 			}, 500)
@@ -225,6 +227,7 @@ $('#btnReg').on('click', function () {
 				alert("Register Successfully. Check your inbox to get Active ID");
 				STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'registered'}}, function () {
 					ob('a-active').click();
+					ob('active-email').value = email;
 				})
 			}
 			else {
@@ -275,6 +278,7 @@ $('#btnActive').on('click', function () {
 					// don't care
 				})
 				ob('a-login').click();
+				ob('email').value = email;
 			}
 			ob('btnActive').classList.remove('loading');
 			ob('btnActive').removeAttribute('disabled');
