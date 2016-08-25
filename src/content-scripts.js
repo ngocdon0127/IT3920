@@ -451,10 +451,16 @@ function emailRowClickHandler () {
 						var extraId = Math.floor(Math.random() * 1000000);
 						var btn = document.createElement('input');
 						btn.setAttribute('type', 'button');
-						btn.setAttribute('value', 'Decrypt this email ' + extraId);
+						btn.setAttribute('value', 'Decrypt this email ');
 						btn.setAttribute('btnClass', 'btnDecrypt');
 						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
-						var cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '')
+						var cipher = '';
+						try {
+							cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '');
+						}
+						catch (e){
+							continue;
+						}
 						$(findPre(divs[i])).parent().attr('e2ee-bookmark', extraId);
 						// btn.setAttribute('cipher', cipher);
 						var wrapperId = '#wrapper-' + extraId;
@@ -465,7 +471,7 @@ function emailRowClickHandler () {
 						// console.log(cipher);
 						divs[i].children[0].children[0].appendChild(document.createElement('br'));
 						divs[i].children[0].children[0].appendChild(btn);
-						console.log('added');
+						// console.log('added');
 						var frameDecrypt = `
 							<div class="form-group">
 								<label for="attach-` + extraId + `" class="e2eelabel">Choose *.encrypted file to decrypt</label><br />
@@ -487,10 +493,10 @@ function emailRowClickHandler () {
 						ob('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
 						ob('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, i));
 						ob('btnHide-' + extraId).addEventListener('click', function () {
-							console.log('#wrapper-' + extraId);
+							// console.log('#wrapper-' + extraId);
 							jQuery(wrapperId).hide('normal');
 						});
-						console.log('done added');
+						// console.log('done added');
 					}
 					else{
 						// console.log('exist, d\' add');
@@ -1205,7 +1211,7 @@ function decryptEmail(data, extraId, position) {
 		}, function (response) {
 			// console.log(response);
 			// console.log(user);
-			console.log(response);
+			// console.log(response);
 			if (response.status !== 'success'){
 				alert(response.error);
 				return removeAnimation(500, extraId);
@@ -1216,7 +1222,7 @@ function decryptEmail(data, extraId, position) {
 
 			// Start decrypting
 			try {
-				console.log(user);
+				// console.log(user);
 				var privateKey = user.encryptedPrivateKey;
 				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
 				privateKey = preDecrypt(privateKey);
@@ -1247,7 +1253,7 @@ function decryptEmail(data, extraId, position) {
 					console.log('using main key');
 				}
 				var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
-				console.log(plainText);
+				// console.log(plainText);
 
 				// plainText should consist of 1 or 2 parts.
 				// The first part is the original email Alice sends to Bob.
@@ -1285,10 +1291,10 @@ function decryptEmail(data, extraId, position) {
 				// replace encrypted email with the decrypted email
 				if (MAIL_SERVICE == GMAIL){
 					// ob('eframe-cryptojs').removeAttribute('disabled');
-					console.log('replacing...');
-					console.log(document.getElementsByClassName('adP adO'));
+					// console.log('replacing...');
+					// console.log(document.getElementsByClassName('adP adO'));
 					var cipherBlock = findGmailBlock(extraId);
-					console.log(cipherBlock);
+					// console.log(cipherBlock);
 					if (cipherBlock) {
 							$(cipherBlock).parent().html(function () {
 							return plainText[0];

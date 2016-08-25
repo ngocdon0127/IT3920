@@ -97,3 +97,13 @@ button.btn-hide {
     outline: rgb(255, 255, 255) none 0px;
     padding: 6px 12px;
 }/*#I_1*/
+
+button.btn-encrypt-email:after,
+button.btn-encrypt-email:before {
+	padding: 0px 0px !important;
+}
+
+button.btn-encrypt-email{
+	width: 45px !important;
+	height: 30px;
+}
