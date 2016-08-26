@@ -235,11 +235,11 @@ chrome.runtime.sendMessage({
 
 if (MAIL_SERVICE == GMAIL){
 	/**
-	 * Detect when inbox is about to loaded.
+	 * Detect when inbox or sent items is about to load.
 	 *
 	 */
 	setInterval(function () {
-		if (/\#inbox\/.+$/.test(window.location.href)){
+		if (/(\#inbox|\#sent)\/.+$/.test(window.location.href)){
 			// console.log('run direct');
 			emailRowClickHandler();
 		}
@@ -284,7 +284,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 				console.log("CSS is injected");
 			}
 			catch (e){
-
+				// Don't care
 			}
 		}
 	}, 1000)
@@ -298,12 +298,13 @@ else if (MAIL_SERVICE == HUST_MAIL){
 			// console.log(div);
 			// div.ltr
 			if (div.children.length > 0){
+				var parentDiv = div;
 				div = div.children[0];
 				// console.log(div);
 				// console.log(div.nodeName.toLowerCase());
-				// console.log(div.getAttribute('dir').toLowerCase());
+				var canAdd = true;
 				if ((div.nodeName.toLowerCase() == 'div') && (div.getAttribute('dir').toLowerCase() == 'ltr')){
-					var canAdd = true;
+					// HUST inbox
 					for (var i = 0; i < div.children.length; i++) {
 						var e = div.children[i];
 						try{
@@ -315,54 +316,97 @@ else if (MAIL_SERVICE == HUST_MAIL){
 							canAdd = false;
 						}
 					}
-					if (canAdd){
-						var extraId = Math.floor(Math.random() * 1000000);
-						var pre = div.children[0];
-						// console.log(pre);
-						var btn = document.createElement('input');
-						btn.setAttribute('type', 'button');
-						btn.setAttribute('value', 'Decrypt this email');
-						btn.setAttribute('class', 'contentBtnDecrypt');
-						var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
-						div.appendChild(document.createElement('br'));
-						div.appendChild(btn);
-
-						btn.setAttribute('btnClass', 'btnDecrypt');
-						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
-						// btn.setAttribute('cipher', cipher);
-						btn.addEventListener('click', function () {
-							console.log('show clicked');
-							top.frames["Main"].document.getElementById('wrapper-' + extraId).style.display = 'block';
-						});
-						// console.log(cipher);
-						console.log('added');
-						var frameDecrypt = `
-							<div class="form-group">
-								<label for="attach-` + extraId + `" class="e2eelabel">Choose *.encrypted file to decrypt</label><br />
-								<input type="file" class="attach" name="attach" id="attach-` + extraId + `">
-							</div>
-							<div class="form-group">
-								<button position="0" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
-							</div>`;
-						// console.log(frameDecrypt);
-						var wrapper = document.createElement('div');
-						wrapper.setAttribute('class', 'e2ee-container decrypt-wrapper decrypt-wrapper-hust');
-						wrapper.setAttribute('id', 'wrapper-' + extraId);
-						wrapper.setAttribute('style', 'display: none');
-						wrapper.innerHTML = frameDecrypt;
-						div.appendChild(wrapper);
-
-						// this line: Cannot add BUTTON_LOADING effect to button decrypt.
-						// so that, cannot removeAnimation.
-						// somehow, it causes HUST Mail reload. 
-						// WASTE LOTS OF TIME TO FIGURE OUT WHY HUST MAIL RELOAD.
-						// ob('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
-
-
-						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
-						top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, 0));
-						console.log('done added');
+					
+				}
+				else if (div.nodeName.toLowerCase().localeCompare('pre') === 0){
+					// HUST sent mails
+					div = parentDiv;
+					for (var i = 0; i < div.children.length; i++) {
+						var e = div.children[i];
+						try{
+							if ((e.nodeName.toLowerCase() == 'input') && (e.getAttribute('btnClass').localeCompare('btnDecrypt') == 0)){
+								canAdd = false;
+							}
+						}
+						catch(err){
+							canAdd = false;
+						}
 					}
+				}
+				else {
+					// Other location. Do not add btn
+					canAdd = false;
+				}
+				if (canAdd){
+					var extraId = Math.floor(Math.random() * 1000000);
+					var wrapperId = 'wrapper-' + extraId;
+					var pre = div.children[0];
+					console.log(pre);
+					var btn = document.createElement('input');
+					btn.setAttribute('type', 'button');
+					btn.setAttribute('value', 'Decrypt this email');
+					btn.setAttribute('class', 'contentBtnDecrypt');
+					btn.setAttribute('bound-wrapper', wrapperId);
+					var cipher = pre.innerHTML.replace(/[<][^>]*[>]/g, '')
+					div.appendChild(document.createElement('br'));
+					div.appendChild(btn);
+
+					btn.setAttribute('btnClass', 'btnDecrypt');
+					btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
+					// btn.setAttribute('cipher', cipher);
+					btn.addEventListener('click', function () {
+						console.log('show clicked');
+						// top.frames["Main"].document.getElementById(this.getAttribute('bound-wrapper')).style.display = 'block';
+						jQuery(top.frames["Main"].document.getElementById(this.getAttribute('bound-wrapper'))).show('normal');
+					});
+					// console.log(cipher);
+					console.log('added');
+					var frameDecrypt = `
+						<div class="form-group">
+							<label for="attach-` + extraId + `" class="e2eelabel">Choose *.encrypted file to decrypt</label><br />
+							<input type="file" class="attach" name="attach" id="attach-` + extraId + `">
+						</div>
+						<div class="form-group">
+							<button position="0" data-label="Decrypt" id="btnDecrypt-` + extraId + `" class="btn-crypto">Decrypt</button>
+						</div>
+						<div class="form-group">
+							<button bound-wrapper="` + wrapperId + `" id="btnHide-` + extraId + `" class="e2ee-btn-waring btn-hide">Hide</button>
+						</div>`;
+					// console.log(frameDecrypt);
+					var wrapper = document.createElement('div');
+					wrapper.setAttribute('class', 'e2ee-container decrypt-wrapper decrypt-wrapper-hust');
+					wrapper.setAttribute('id', wrapperId);
+					wrapper.setAttribute('style', 'display: none');
+					wrapper.innerHTML = frameDecrypt;
+					div.appendChild(wrapper);
+
+					console.log(top.frames["Main"].document.getElementById('btnHide-' + extraId));
+
+					// top.frames["Main"].document.getElementById('btnHide-' + extraId).addEventListener('click', BUTTON_LOADING);
+					top.frames["Main"].document.getElementById('btnHide-' + extraId).addEventListener('click', function () {
+
+						this.setAttribute('disabled', 'disabled');    // Magic. Do not touch 
+
+						jQuery(top.frames["Main"].document.getElementById(this.getAttribute('bound-wrapper'))).hide('normal');
+
+						setTimeout(function () {                      // Magic. Do not touch 
+							this.removeAttribute('disabled');         // Magic. Do not touch 
+						}.bind(this), 500);                           // Magic. Do not touch 
+					});
+
+					/**
+					 * Magic: 
+					 * 
+					 * After click in some button inside frame, we have to disable it.
+					 * Otherwise, somehow it causes HUST Mail reload. 
+					 * Don't know why.
+					 * WASTE LOTS OF TIME TO FIGURE OUT WHY HUST MAIL RELOAD !!!
+					 */
+
+
+					top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', BUTTON_LOADING);
+					top.frames["Main"].document.getElementById('btnDecrypt-' + extraId).addEventListener('click', sendCipherToDecryptFrame.bind(this, cipher, extraId, 0));
+					console.log('done added');
 				}
 			}
 		}
@@ -449,11 +493,13 @@ function emailRowClickHandler () {
 				finally{
 					if (canAdd){
 						var extraId = Math.floor(Math.random() * 1000000);
+						var wrapperId = '#wrapper-' + extraId;
 						var btn = document.createElement('input');
 						btn.setAttribute('type', 'button');
-						btn.setAttribute('value', 'Decrypt this email ');
+						btn.setAttribute('value', 'Decrypt this email');
 						btn.setAttribute('btnClass', 'btnDecrypt');
 						btn.setAttribute('class', 'contentBtnDecrypt btn e2ee-btn-primary');
+						btn.setAttribute('bound-wrapper', wrapperId);
 						var cipher = '';
 						try {
 							cipher = findPre(divs[i]).innerHTML.replace(/[<][^>]*[>]/g, '');
@@ -463,10 +509,8 @@ function emailRowClickHandler () {
 						}
 						$(findPre(divs[i])).parent().attr('e2ee-bookmark', extraId);
 						// btn.setAttribute('cipher', cipher);
-						var wrapperId = '#wrapper-' + extraId;
 						btn.addEventListener('click', function () {
-							console.log('#wrapper-' + extraId);
-							jQuery(wrapperId).show('normal');
+							jQuery(this.getAttribute('bound-wrapper')).show('normal');
 						});
 						// console.log(cipher);
 						divs[i].children[0].children[0].appendChild(document.createElement('br'));
@@ -1072,7 +1116,7 @@ function handleFileSelect (event) {
 var aesKeyFile = '';
 
 // user's email
-var myEmail = getEmailAddress();
+var myEmail = '';
 
 // decrypt worker.
 var dw = undefined;
