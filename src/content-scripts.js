@@ -33,6 +33,12 @@ var aesKeyFile = '';
 // public key of recipients
 var publicKeys = {};
 
+// a place to save current encrypted email
+var currentCipherContent = '';
+
+// a place to save id of Decrypt Block
+var currentExtraId = 0;
+
 // ======================== CryptoJS - AES =====================
 // cannot seperate in another file.
 // So we need to copy and paste it here.
@@ -192,6 +198,65 @@ workerTag.setAttribute('type', 'javascript/worker');
 workerTag.innerHTML = workerString;
 document.getElementsByTagName('head')[0].appendChild(workerTag);
 
+// Insert Bootstrap Modal
+var modalString = `
+<div class="modal-dialog">
+	
+	<!-- Modal content-->
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" id="markCloseModal">&times;</button>
+			<h3 style="text-decoration: none;" class="modal-title e2ee-modal-title">Enter passphrase of <span id="modalEmail"></span>:</h3>
+		</div>
+		<div class="modal-body">
+			<input type="password" id="modalPassword" placeholder="Password" class="e2ee-form-control" />
+			
+		</div>
+		<div class="modal-footer">
+			<input type='button' class="e2ee-btn-success" id="btnModal" value="OK" />
+			<button type="button" class="e2ee-btn-default" data-dismiss="modal" id="btnCloseModal">Close</button>
+		</div>
+	</div>
+	
+</div>
+`;
+
+var modal = document.createElement('div');
+modal.id = 'decryptModal';
+modal.setAttribute('class', 'modal fade e2ee-modal');
+modal.setAttribute('role', 'dialog');
+modal.innerHTML = modalString;
+
+try{
+	document.getElementsByTagName('body')[0].appendChild(modal);
+}
+catch (e){
+	// HUST Mail website does not have body tag.
+	// All the webpage is included in iframe tag.
+	var body = document.createElement('body');
+	document.getElementsByTagName('html')[0].appendChild(body);
+	document.getElementsByTagName('body')[0].appendChild(modal);
+}
+
+ob('btnModal').addEventListener('click', function () {
+	console.log('modal clicked');
+	// console.log(ob('modalPassword').value);
+	jQuery('#decryptModal').modal('hide');
+	setTimeout(function () {
+		decryptEmailAfterAuthen(ob('modalPassword').value, currentExtraId);
+	}, 500);
+})
+
+ob('markCloseModal').addEventListener('click', function () {
+	removeAnimation(500, currentExtraId);
+	return;
+})
+
+ob('btnCloseModal').addEventListener('click', function () {
+	removeAnimation(500, currentExtraId);
+	return;
+})
+
 /**
  *	Detect current Email Service
  *
@@ -316,7 +381,29 @@ else if (MAIL_SERVICE == HUST_MAIL){
 							canAdd = false;
 						}
 					}
-					
+					if (canAdd){
+						// console.log('can add. Checking cipher block...');
+						var hasCipherBlock = false;
+						for (var i = 0; i < div.children.length; i++) {
+							var e = div.children[i];
+							try{
+								if (e.nodeName.toLowerCase() == 'pre') {
+									hasCipherBlock = true;
+									break;
+								}
+							}
+							catch(err){
+								
+							}
+						}
+						canAdd = hasCipherBlock;
+						if (hasCipherBlock){
+							// console.log('has cipher. Adding');
+						}
+						else {
+							// console.log('do not have cipher.');
+						}
+					}
 				}
 				else if (div.nodeName.toLowerCase().localeCompare('pre') === 0){
 					// HUST sent mails
@@ -341,7 +428,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 					var extraId = Math.floor(Math.random() * 1000000);
 					var wrapperId = 'wrapper-' + extraId;
 					var pre = div.children[0];
-					console.log(pre);
+					// console.log(pre);
 					var btn = document.createElement('input');
 					btn.setAttribute('type', 'button');
 					btn.setAttribute('value', 'Decrypt this email');
@@ -596,7 +683,10 @@ var btnDecryptClickHandler = function (cipher, extraId, position) {
 	}
 
 	if (singleEmails.hasOwnProperty(user.email)){
-		decryptEmail(singleEmails[user.email], extraId, position);
+
+		// Here, we just open Bootstrap Modal in order to authenticate user
+		// Decrypting email will be executed after clicking OK button in Modal.
+		authenBeforeDecrypting(singleEmails[user.email], extraId, position);
 	}
 	else {
 		alert("This email wasn't encrypted for " + user.email);
@@ -1155,7 +1245,7 @@ function decryptFile (inputFiles, extraId) {
 			// But browser does not understand what FileReader is, 
 			// because it thinks file-worker.js is just a normal JavaScript file, not a Worker.
 
-			// So we need to inject Worker's source code direct into Gmail Tab 's source
+			// So we need to inject Worker's source code into Gmail Tab 's source directly
 			// After that, we can construct worker from injected code, 
 			// and tell the browser that code is javascript/worker
 			var blob = new Blob([
@@ -1216,11 +1306,13 @@ function decryptFile (inputFiles, extraId) {
 // });
 
 /**
- * Decrypt encrypted email
+ * Authenticate user
  *
  * @param {string} data Encrypted email
+ * @param {integer} extraId extraId of block decrypt
+ * @param {integer} position will remove in next release
  */
-function decryptEmail(data, extraId, position) {
+function authenBeforeDecrypting(data, extraId, position) {
 	data = preDecrypt(data);
 
 	// data must be in this format:
@@ -1245,125 +1337,20 @@ function decryptEmail(data, extraId, position) {
 
 		// use main key
 		// console.log(privateKey);
-		var password = prompt('Enter passphrase of ' + data[1] + ':', '');
-		var passphrase = CryptoJS.MD5(password).toString(CryptoJS.enc.Base16);
-		chrome.runtime.sendMessage({
-			actionType: 'verify',
-			email: user.email,
-			password: password,
-			hashedPassword: passphrase
-		}, function (response) {
-			// console.log(response);
-			// console.log(user);
-			// console.log(response);
-			if (response.status !== 'success'){
-				alert(response.error);
-				return removeAnimation(500, extraId);
-			}
-			// save key to user.
-			user = response;
+		currentCipherContent = data[0];
+		currentExtraId = extraId;
 
-
-			// Start decrypting
-			try {
-				// console.log(user);
-				var privateKey = user.encryptedPrivateKey;
-				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
-				privateKey = preDecrypt(privateKey);
-				// console.log('done privateKey');
-				var decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
-				console.log(decryptResult);
-				if (decryptResult.status.localeCompare('success') != 0){
-					// if fail, use temp key.
-					if (!('encryptedTmpPrivateKey' in user)){
-						alert("Could not decrypt message with your Private Key");
-						return;
-					}
-					privateKey = user.encryptedTmpPrivateKey;
-					// console.log(privateKey);
-					privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
-					privateKey = preDecrypt(privateKey);
-					// console.log('done privateKey');
-					decryptResult = cryptico.decrypt(data[0], cryptico.RSAKeyFromString(privateKey));
-					console.log(decryptResult);
-					if (decryptResult.status.localeCompare('success') != 0){
-						alert("Cannot decrypt message with your Private Key");
-						removeAnimation(500, extraId);
-						return;
-					}
-					console.log('using tmp key');
-				}
-				else {
-					console.log('using main key');
-				}
-				var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
-				// console.log(plainText);
-
-				// plainText should consist of 1 or 2 parts.
-				// The first part is the original email Alice sends to Bob.
-				// The second part (if exist) is the AES secret key used to encrypt attachments.
-				// These two parts is seperated by '|'
-
-				// Ex:
-				// This is an encrypted email without any attachments.
-				// This is an encrypted email with attachments|somekey.
-				$('#decrypted').html(function () {
-					return plainText[0];
-				});
-				$('#decrypted').fadeIn();
-				var inputFiles = '';
-				if (MAIL_SERVICE == GMAIL){
-					inputFiles = ob('attach-' + extraId);
-				}
-				else if (MAIL_SERVICE == HUST_MAIL){
-					inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
-				}
-				if (!inputFiles || inputFiles.files.length < 1){
-
-					// without decrypting files, extension can decrypt email very fast.
-					// => let the button animate in a short time before reverting it to the original state.
-					
-					removeAnimation(500, extraId);
-					// console.log('remove loading UI effect');
-				}
-				else{
-					aesKeyFile = plainText[1];
-					console.log(aesKeyFile);
-					decryptFile(inputFiles, extraId);
-				}
-
-				// replace encrypted email with the decrypted email
-				if (MAIL_SERVICE == GMAIL){
-					// ob('eframe-cryptojs').removeAttribute('disabled');
-					// console.log('replacing...');
-					// console.log(document.getElementsByClassName('adP adO'));
-					var cipherBlock = findGmailBlock(extraId);
-					// console.log(cipherBlock);
-					if (cipherBlock) {
-							$(cipherBlock).parent().html(function () {
-							return plainText[0];
-						});
-					}
-					else {
-						alert('Could not find Cipher Block');
-					}
-					
-				}
-				else if (MAIL_SERVICE == HUST_MAIL){
-
-					var div = top.frames["Main"].document.getElementsByClassName('Fixed')[0].children[0];
-					// console.log(div);
-					// top.frames["Main"].document.getElementById('eframe-cryptojs').removeAttribute('disabled');
-					div.innerHTML = plainText[0];
-				}
-			}
-			catch (e){
-				console.log(e);
-				alert('Email is corrupted or invalid passphrase.');
-				removeAnimation(0, extraId);
-			}
-		})
-		
+		// Prevent closing modal by clicking outside or pressing ESC button
+		jQuery('#decryptModal').modal({
+			backdrop: 'static',
+			keyboard: false
+		});
+		jQuery('#decryptModal').modal('show');
+		setTimeout(function () {
+			ob('modalEmail').innerHTML = user.email;
+			ob('modalPassword').value = '';
+			$('#modalPassword').focus();
+		}, 300);
 	}
 	catch (e){
 		console.log(e);
@@ -1372,12 +1359,149 @@ function decryptEmail(data, extraId, position) {
 	}
 }
 
-// ob('btnDecrypt').addEventListener('click', btnDecryptClickHandler);
+/**
+ * After user enter password, regenerate RSA Key
+ *
+ * @param {string} rawPassword User's Password
+ */
+function decryptEmailAfterAuthen (rawPassword, extraId) {
+	var passphrase = CryptoJS.MD5(rawPassword).toString(CryptoJS.enc.Base16);
+	chrome.runtime.sendMessage({
+		actionType: 'verify',
+		email: user.email,
+		password: rawPassword,
+		hashedPassword: passphrase
+	}, decryptEmailCallback(passphrase, extraId))
+}
 
-// Add loading effect
-// ob('btnDecrypt').addEventListener('click', BUTTON_LOADING);
+/**
+ * Callback when RSA Key regeneration is complete
+ *
+ * @param {string} passphrase MD5(User's Password)
+ * @param {integer} extraId extraId of block decrypt
+ */
+function decryptEmailCallback (passphrase, extraId) {
+	// var passphrase = CryptoJS.MD5(rawPassword).toString(CryptoJS.enc.Base16);
+	var cipher = currentCipherContent;
+	return function (response) {
+		// console.log(response);
+		// console.log(user);
+		// console.log(response);
+		if (response.status !== 'success'){
+			alert(response.error);
+			return removeAnimation(500, extraId);
+		}
+		// save key to user.
+		user = response;
 
-// remove animation of button decrypt
+
+		// Start decrypting
+		try {
+			// console.log(user);
+			var privateKey = user.encryptedPrivateKey;
+			privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
+			privateKey = preDecrypt(privateKey);
+			// console.log('done privateKey');
+			var decryptResult = cryptico.decrypt(cipher, cryptico.RSAKeyFromString(privateKey));
+			console.log(decryptResult);
+			if (decryptResult.status.localeCompare('success') != 0){
+				// if fail, use temp key.
+				if (!('encryptedTmpPrivateKey' in user)){
+					alert("Could not decrypt message with your Private Key");
+					return;
+				}
+				privateKey = user.encryptedTmpPrivateKey;
+				// console.log(privateKey);
+				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
+				privateKey = preDecrypt(privateKey);
+				// console.log('done privateKey');
+				decryptResult = cryptico.decrypt(cipher, cryptico.RSAKeyFromString(privateKey));
+				console.log(decryptResult);
+				if (decryptResult.status.localeCompare('success') != 0){
+					alert("Cannot decrypt message with your Private Key");
+					removeAnimation(500, extraId);
+					return;
+				}
+				console.log('using tmp key');
+			}
+			else {
+				console.log('using main key');
+			}
+			var plainText = decodeURIComponent(escape(decryptResult.plaintext)).split('|');
+			// console.log(plainText);
+
+			// plainText should consist of 1 or 2 parts.
+			// The first part is the original email Alice sends to Bob.
+			// The second part (if exist) is the AES secret key used to encrypt attachments.
+			// These two parts is seperated by '|'
+
+			// Ex:
+			// This is an encrypted email without any attachments.
+			// This is an encrypted email with attachments|somekey.
+			$('#decrypted').html(function () {
+				return plainText[0];
+			});
+			$('#decrypted').fadeIn();
+			var inputFiles = '';
+			if (MAIL_SERVICE == GMAIL){
+				inputFiles = ob('attach-' + extraId);
+			}
+			else if (MAIL_SERVICE == HUST_MAIL){
+				inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
+			}
+			if (!inputFiles || inputFiles.files.length < 1){
+
+				// without decrypting files, extension can decrypt email very fast.
+				// => let the button animate in a short time before reverting it to the original state.
+				
+				removeAnimation(500, extraId);
+				// console.log('remove loading UI effect');
+			}
+			else{
+				aesKeyFile = plainText[1];
+				console.log(aesKeyFile);
+				decryptFile(inputFiles, extraId);
+			}
+
+			// replace encrypted email with the decrypted email
+			if (MAIL_SERVICE == GMAIL){
+				// ob('eframe-cryptojs').removeAttribute('disabled');
+				// console.log('replacing...');
+				// console.log(document.getElementsByClassName('adP adO'));
+				var cipherBlock = findGmailBlock(extraId);
+				// console.log(cipherBlock);
+				if (cipherBlock) {
+						$(cipherBlock).parent().html(function () {
+						return plainText[0];
+					});
+				}
+				else {
+					alert('Could not find Cipher Block');
+				}
+				
+			}
+			else if (MAIL_SERVICE == HUST_MAIL){
+
+				var div = top.frames["Main"].document.getElementsByClassName('Fixed')[0].children[0];
+				// console.log(div);
+				// top.frames["Main"].document.getElementById('eframe-cryptojs').removeAttribute('disabled');
+				div.innerHTML = plainText[0];
+			}
+		}
+		catch (e){
+			console.log(e);
+			alert('Email is corrupted or invalid passphrase.');
+			removeAnimation(0, extraId);
+		}
+	}
+}
+
+/**
+ * remove animation of button decrypt
+ *
+ * @param {integer} time miliseconds
+ * @param {integer} extraId Id of Decrypt Block
+ */
 
 function removeAnimation (time, extraId) {
 	// return false;
@@ -1399,6 +1523,12 @@ function removeAnimation (time, extraId) {
 		}
 	}, time);
 }
+
+/**
+ * Find which Decrypt Block is running
+ *
+ * @param {integer} bookmark Id of running Decrypt Block
+ */
 
 function findGmailBlock (bookmark) {
 	var arr = document.getElementsByClassName('adP adO');

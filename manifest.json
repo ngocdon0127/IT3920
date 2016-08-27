@@ -36,9 +36,10 @@
 				"/crypto-js/build/components/enc-base64-min.js",
 				"/src/consts-and-funcs.js",
 				"/res/FileSaver.js",
+				"/res/bootstrap.min.js",
 				"/src/content-scripts.js"
 			],
-			"css": ["/src/style.css", "/src/content-css.css"]
+			"css": ["/src/style.css", "/src/content-css.css", "/src/bootstrap-modal.css"]
 		}
 	],
 	"background": {

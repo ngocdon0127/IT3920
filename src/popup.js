@@ -188,8 +188,8 @@ $('#btnReg').on('click', function () {
 	}
 
 	var password = ob('reg-password').value;
-	if (password.length < 1){
-		alert('Passphrase must not be null.');
+	if ((password.length < 10) || (password.length > 16)){
+		alert('Passphrase must be longer than 9 characters and shorter than 17 characters.');
 		ob('btnReg').classList.remove('loading');
 		ob('btnReg').removeAttribute('disabled');
 		return;
