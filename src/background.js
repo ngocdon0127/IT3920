@@ -7,11 +7,11 @@ var sourceTabId = '';
 // use this key to encrypt and decrypt attachment.
 var aesKeyFile = '';
 
-chrome.browserAction.onClicked.addListener(function (tab) {
-	chrome.tabs.create({url: '/src/key-list.html'}, function (tab) {
-		// body...
-	});
-})
+// chrome.browserAction.onClicked.addListener(function (tab) {
+// 	chrome.tabs.create({url: '/src/key-list.html'}, function (tab) {
+// 		// body...
+// 	});
+// })
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.actionType == 'open-encrypt-frame'){
@@ -59,33 +59,33 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 // add context menu
-chrome.contextMenus.create({
-	title: "Decrypt this message.",
-	contexts: ["selection"],
-	onclick: clickHandler
-});
+// chrome.contextMenus.create({
+// 	title: "Decrypt this message.",
+// 	contexts: ["selection"],
+// 	onclick: clickHandler
+// });
 
 // Context Menu click handler
-function clickHandler (data, tab) {
-	chrome.windows.create({
-		url: "/src/decrypt-email.html",
-		// type: "panel"
-	});
-	if ((typeof(data) == 'object') && ('selectionText' in data) && data.selectionText.length > 0){
-		data = data.selectionText;
-	}
-	chrome.extension.onConnect.addListener(function(port) {
-		port.postMessage({
+// function clickHandler (data, tab) {
+// 	chrome.windows.create({
+// 		url: "/src/decrypt-email.html",
+// 		// type: "panel"
+// 	});
+// 	if ((typeof(data) == 'object') && ('selectionText' in data) && data.selectionText.length > 0){
+// 		data = data.selectionText;
+// 	}
+// 	chrome.extension.onConnect.addListener(function(port) {
+// 		port.postMessage({
 
-			/**
-			 * Character ZERO WIDTH SPACE (unicode u200B - 8203) 
-			 * sometimes appears in selectionText when user double click.
-			 * remove it and trim() string before sending to decrypt-email.html
-			 */
-			data: data.replace(/\u200B/g, '').trim()
-		});
-	});
-}
+// 			/**
+// 			 * Character ZERO WIDTH SPACE (unicode u200B - 8203) 
+// 			 * sometimes appears in selectionText when user double click.
+// 			 * remove it and trim() string before sending to decrypt-email.html
+// 			 */
+// 			data: data.replace(/\u200B/g, '').trim()
+// 		});
+// 	});
+// }
 
 // // Get Gmail address
 // function getCurrentGmailAddr () {
@@ -262,7 +262,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			aesKeyFile: aesKeyFile
 		});
 	}
-	else if (request.actionType == 'decrypt-email'){
+	else if (request.actionType === 'decrypt-email'){
 		console.log('catch decrypt-email in under');
 		console.log(request.cipher);
 		clickHandler(request.cipher);

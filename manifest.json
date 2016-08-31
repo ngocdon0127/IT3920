@@ -4,8 +4,7 @@
 	"version": "2.0",
 	"permissions": [
 		"activeTab",
-		"http://*/*",
-		"https://*/*",
+		"*://*/*",
 		"storage",
 		"contextMenus"
 	],
@@ -22,7 +21,7 @@
 	"manifest_version": 2,
 	"content_scripts": [
 		{
-			"matches": ["http://*/*", "https://*/*"],
+			"matches": ["*://mail.google.com/*", "*://mail.hust.edu.vn/*", "*://mail.hust.vn/*"],
 			"js": [
 				"/res/jquery.min.js", 
 				"/cryptico/jsbn.js",

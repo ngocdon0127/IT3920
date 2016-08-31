@@ -150,12 +150,6 @@ function replaceLoginForm (email) {
 	$(btn).addClass('btn btn-primary');
 	$(btn).text('Log out');
 	$(btn).on('click', function () {
-		// STORAGE_AREA.clear(function () {
-		// 	// alert('Signed Out.');
-		// 	setTimeout(function () {
-		// 		window.close();
-		// 	}, 500)
-		// })
 		STORAGE_AREA.set({info: {email: email, isLoggedIn: 0, status: 'activated'}}, function () {
 			setTimeout(function () {
 				window.close();

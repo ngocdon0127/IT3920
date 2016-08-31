@@ -111,60 +111,27 @@ var workerString = `
 			var noOfEncryptedFiles = 0;
 			var filenames = '';
 
-			// FireFox does not support FileReader in Web Worker.
-			// Btw, Encrypting multiple files using Async is too complicated. => use FileReaderSync.
-
-			// if (typeof(FileReader) !== 'undefined'){
-			// 	// var encrypted = '';
-			// 	var reader = [];
-			// 	for (var i = 0; i < files.length; i++) {
-			// 		file = files[i];
-			// 		reader.push(new FileReader());
-			// 		reader[i].onload = function (evt) {
-			// 			if (i < files.length - 1){
-			// 				// encrypted += CryptoJS.AES.encrypt(evt.target.result, msg.data.key).toString() + STR_SEPERATOR;
-							
-			// 			}
-			// 			else{
-			// 				// encrypted += CryptoJS.AES.encrypt(evt.target.result, msg.data.key).toString();
-			// 				encrypted += i;
-			// 				noOfEncryptedFiles++;
-			// 				if (noOfEncryptedFiles == files.length){
-			// 					postMessage({
-			// 						cipher: encrypted,
-			// 						browser: 'Async'
-			// 					});
-			// 				}
-			// 			}
-			// 		}
-			// 		reader[i].readAsDataURL(file);
-			// 	}
-			// }
-			// else{
-				// var encrypted = '';
-				for (var i = 0; i < files.length; i++) {
-					file = files[i];
-					var reader = new FileReaderSync();
-					var dataURL = reader.readAsDataURL(file);
-					if (i < files.length - 1){
-						// encrypted += i + STR_SEPERATOR;
-						encrypted += CryptoJS.AES.encrypt(dataURL, msg.data.key).toString() + STR_SEPERATOR;
-						filenames += file.name + STR_SEPERATOR;
-					}
-					else{
-						encrypted += CryptoJS.AES.encrypt(dataURL, msg.data.key).toString();
-						filenames += file.name;
-					}
-					// noOfEncryptedFiles++;
+			for (var i = 0; i < files.length; i++) {
+				file = files[i];
+				var reader = new FileReaderSync();
+				var dataURL = reader.readAsDataURL(file);
+				if (i < files.length - 1){
+					encrypted += CryptoJS.AES.encrypt(dataURL, msg.data.key).toString() + STR_SEPERATOR;
+					filenames += file.name + STR_SEPERATOR;
 				}
-				var data = filenames + '?' + encrypted;
-				postMessage({
-					cipher: encrypted,
-					filenames: filenames,
-					data: data,
-					browser: 'Sync'
-				});
-			// }
+				else{
+					encrypted += CryptoJS.AES.encrypt(dataURL, msg.data.key).toString();
+					filenames += file.name;
+				}
+				
+			}
+			var data = filenames + '?' + encrypted;
+			postMessage({
+				cipher: encrypted,
+				filenames: filenames,
+				data: data,
+				browser: 'Sync'
+			});
 		}
 		else if (msg.data.type = 'decrypt'){
 			var key = msg.data.key;
@@ -240,7 +207,6 @@ catch (e){
 
 ob('btnModal').addEventListener('click', function () {
 	console.log('modal clicked');
-	// console.log(ob('modalPassword').value);
 	jQuery('#decryptModal').modal('hide');
 	setTimeout(function () {
 		decryptEmailAfterAuthen(ob('modalPassword').value, currentExtraId);
@@ -340,6 +306,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 				jsScript.setAttribute('class', 'e2ee-jsScript');
 				top.frames["Main"].document.body.appendChild(jsScript);
 
+				// mark if inserting CSS + jQuery was successful.
 				var mark = document.createElement('div');
 				mark.setAttribute('style', 'display: none');
 				mark.setAttribute('id', 'e2ee-mark');
@@ -393,7 +360,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 								}
 							}
 							catch(err){
-								
+								// Don't care
 							}
 						}
 						canAdd = hasCipherBlock;
@@ -484,7 +451,7 @@ else if (MAIL_SERVICE == HUST_MAIL){
 					/**
 					 * Magic: 
 					 * 
-					 * After click in some button inside frame, we have to disable it.
+					 * After clicking in some button inside HUST Mail's iframe, we have to disable it.
 					 * Otherwise, somehow it causes HUST Mail reload. 
 					 * Don't know why.
 					 * WASTE LOTS OF TIME TO FIGURE OUT WHY HUST MAIL RELOAD !!!
@@ -545,21 +512,7 @@ function emailRowClickHandler () {
 					else{
 						throw new Error();
 					}
-					// if (btn.children.length > 1){
-					// 	btn = btn.children[1];
-					// 	if (btn.getAttribute('btnClass').localeCompare('btnDecrypt') == 0){
-					// 		canAdd = false;
-					// 	}
-					// }
-					// else{
-					// 	if ((btn.children.length > 0) && (btn.children[0].nodeName.localeCompare('pre'))){
-					// 		canAdd = true;
-					// 	}
-					// 	else{
-					// 		canAdd = false;
-					// 	}
-					// 	throw new Error();
-					// }
+
 					for (var j = 0; j < btn.children.length; j++) {
 						var e = btn.children[j];
 						// console.log(e);
@@ -630,7 +583,7 @@ function emailRowClickHandler () {
 						// console.log('done added');
 					}
 					else{
-						// console.log('exist, d\' add');
+						// do not add
 					}
 				}
 			}
@@ -815,19 +768,14 @@ function clickHandler() {
 		alert("login first.");
 		return;
 	}
-	// data['requestUser'] = {
-	// 	userId: user.userId,
-	// 	password: user.hashedPassword
-	// };
+
 	var users = [];
 	for (var i = 0; i < recipients.length; i++) {
-		// users.push({'email': recipients[i]});
 		data.push(recipients[i]);
 	}
 
 	chrome.runtime.sendMessage({
 			actionType: 'request-public-key',
-			// requestUser: data['requestUser'],
 			requestedUsers: data,
 		},
 		function (response) {
@@ -839,70 +787,6 @@ function clickHandler() {
 			publicKeys = JSON.parse(JSON.stringify(response.data));
 		}
 	)
-
-	// ========== old way ==========
-
-	// data['requestedUsers'] = users;
-	/*
-	chrome.runtime.sendMessage(
-		{
-			actionType: 'check-recipients-exist',
-			requestUser: data['requestUser'],
-			requestedUsers: users
-		},
-		function (response) {
-			if (response.name !== 'recipients-status'){
-				return;
-			}
-			var exist = [];
-			var notExist = [];
-			var d = response.data;
-
-			// optimize later.
-			// Using data['requestedUsers'].filter
-			for (var i in d){
-				if (d[i] === 'Exist'){
-					exist.push({'email': i});
-				}
-				else if (d[i] === 'Not Exist'){
-					notExist.push({'email': i});
-				}
-			}
-			// request public key for user in exist[]
-			chrome.runtime.sendMessage({
-					actionType: 'request-public-key',
-					requestUser: data['requestUser'],
-					requestedUsers: exist,
-				},
-				function (response) {
-					if (response.name !== 'requested-public-keys'){
-						return;
-					}
-					// save to global variable.
-					publicKeys = response.data;
-				}
-			)
-			// register account for user in notExist[]
-			chrome.runtime.sendMessage({
-					actionType: 'register-multiple-users',
-					requestUser: data['requestUser'],
-					requestedUsers: notExist,
-				},
-				function (response) {
-					if (response.name !== 'send-registered-users'){
-						return;
-					}
-					// save to global variable.
-					for(var i = 0; i < response.data.length; i++){
-						publicKeys[response.data[i].email] = response.data[i].publicKey;
-					}
-				}
-			)
-		}
-	);
-	*/
-
-	// ========== end of old way ==========
 
 	var intervalEncrypt = setInterval(function () {
 		console.log(Object.keys(publicKeys).length + " : " + noOfRecipients);
@@ -1165,9 +1049,6 @@ function findPre (element) {
 // from decrypt-email.js
 'use strict';
 
-// user info
-// var user = {};
-
 // storage single email for 1 recipient
 // structure:
 // singleEmails = {
@@ -1176,17 +1057,6 @@ function findPre (element) {
 // }
 // will be filled right after the time popup windows is created.
 var singleEmails = {};
-
-// chrome.runtime.sendMessage({
-// 		actionType: 'get-login-status',
-// 	},
-// 	function (response) {
-// 		if (response.isLoggedIn == 1){
-// 			user = response;
-// 			console.log(user);
-// 		}
-// 	}
-// )
 
 // Log data to console when user choose files.
 function handleFileSelect (event) {
@@ -1197,9 +1067,6 @@ function handleFileSelect (event) {
 	};
 
 }
-
-// add event listener for choosing-files event.
-// ob('attach').addEventListener('change', handleFileSelect, false);
 
 
 // use this key to decrypt attachments.
@@ -1215,13 +1082,6 @@ var dw = undefined;
  * Decrypt attachments.
  */
 function decryptFile (inputFiles, extraId) {
-	// var inputFiles = '';
-	// if (MAIL_SERVICE == GMAIL){
-	// 	inputFiles = ob('attach-' + extraId);
-	// }
-	// else if (MAIL_SERVICE == HUST_MAIL){
-	// 	inputFiles = top.frames["Main"].document.getElementById('attach-' + extraId);
-	// }
 	if (inputFiles.files.length < 1){
 		return;
 	}
@@ -1286,25 +1146,6 @@ function decryptFile (inputFiles, extraId) {
 	}
 }
 
-// connect to background page
-// var port = chrome.extension.connect({name: "Retrieve decrypted email"});
-// port.onMessage.addListener(function(msg) {
-
-// 	// reset
-// 	singleEmails = {};
-	
-// 	if (!msg.hasOwnProperty('data')){
-// 		return;
-// 	}
-// 	if (msg.data.length < 1){
-// 		return;
-// 	}
-// 	var d = msg.data;
-// 	$('#text').text(deAlignEmail(d));
-// 	$('#text').val(deAlignEmail(d));
-
-// });
-
 /**
  * Authenticate user
  *
@@ -1363,6 +1204,7 @@ function authenBeforeDecrypting(data, extraId, position) {
  * After user enter password, regenerate RSA Key
  *
  * @param {string} rawPassword User's Password
+ * @param {integer} extraId ID of Decrypt block
  */
 function decryptEmailAfterAuthen (rawPassword, extraId) {
 	var passphrase = CryptoJS.MD5(rawPassword).toString(CryptoJS.enc.Base16);
@@ -1381,7 +1223,6 @@ function decryptEmailAfterAuthen (rawPassword, extraId) {
  * @param {integer} extraId extraId of block decrypt
  */
 function decryptEmailCallback (passphrase, extraId) {
-	// var passphrase = CryptoJS.MD5(rawPassword).toString(CryptoJS.enc.Base16);
 	var cipher = currentCipherContent;
 	return function (response) {
 		// console.log(response);
@@ -1464,10 +1305,7 @@ function decryptEmailCallback (passphrase, extraId) {
 			}
 
 			// replace encrypted email with the decrypted email
-			if (MAIL_SERVICE == GMAIL){
-				// ob('eframe-cryptojs').removeAttribute('disabled');
-				// console.log('replacing...');
-				// console.log(document.getElementsByClassName('adP adO'));
+			if (MAIL_SERVICE === GMAIL){
 				var cipherBlock = findGmailBlock(extraId);
 				// console.log(cipherBlock);
 				if (cipherBlock) {
