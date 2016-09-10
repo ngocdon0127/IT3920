@@ -788,6 +788,8 @@ function clickHandler() {
 		}
 	)
 
+	console.log(recipients);
+
 	var intervalEncrypt = setInterval(function () {
 		console.log(Object.keys(publicKeys).length + " : " + noOfRecipients);
 		if (Object.keys(publicKeys).length >= noOfRecipients){
@@ -1238,11 +1240,11 @@ function decryptEmailCallback (passphrase, extraId) {
 
 		// Start decrypting
 		try {
-			// console.log(user);
+			console.log(user);
 			var privateKey = user.encryptedPrivateKey;
 			privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
 			privateKey = preDecrypt(privateKey);
-			// console.log('done privateKey');
+			console.log('done privateKey');
 			var decryptResult = cryptico.decrypt(cipher, cryptico.RSAKeyFromString(privateKey));
 			console.log(decryptResult);
 			if (decryptResult.status.localeCompare('success') != 0){
@@ -1252,10 +1254,10 @@ function decryptEmailCallback (passphrase, extraId) {
 					return;
 				}
 				privateKey = user.encryptedTmpPrivateKey;
-				// console.log(privateKey);
+				console.log(privateKey);
 				privateKey = CryptoJS.AES.decrypt(privateKey, passphrase).toString(CryptoJS.enc.Utf8);
 				privateKey = preDecrypt(privateKey);
-				// console.log('done privateKey');
+				console.log('done privateKey');
 				decryptResult = cryptico.decrypt(cipher, cryptico.RSAKeyFromString(privateKey));
 				console.log(decryptResult);
 				if (decryptResult.status.localeCompare('success') != 0){

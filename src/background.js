@@ -137,7 +137,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		});
 		// open email editor.
 		chrome.windows.create({
-			url: '/src/add-attachments.html'
+			url: '/src/add-attachments.html',
+			type: 'panel'
 		});
 	}
 	else if (request.actionType === 'get-aes-key-file'){

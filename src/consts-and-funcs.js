@@ -257,19 +257,21 @@ function generateRSAKey (email, seed, passphrase, bitlen) {
 
 function getEmailAddress () {
 	var emailAddress = '';
-	var emailRegex = /.+@.+\..+/;
+	// var emailRegex = /.+@.+\..+/;
+	var emailRegex = /[\w\.0-9_]*@[\w\.0-9]*/;
 	var hostname = window.location.hostname;
 
 	// Gmail
 	if (hostname === 'mail.google.com'){
 		var ea = document.getElementsByClassName('gb_ob')[0];
 		if (ea && (emailRegex.test(ea.innerHTML) !== false)){
-			return ea.innerHTML;
+			return ea.innerHTML.match(emailRegex)[0];
 		}
 
 		ea = document.getElementsByClassName('gb_pb')[0];
 		if (ea && (emailRegex.test(ea.innerHTML) !== false)){
-			return ea.innerHTML;
+			// return ea.innerHTML;
+			return ea.innerHTML.match(emailRegex)[0];
 		}
 		return false;
 	}
